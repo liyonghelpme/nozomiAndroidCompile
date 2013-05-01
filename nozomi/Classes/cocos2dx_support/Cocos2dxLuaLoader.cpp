@@ -32,12 +32,14 @@ extern "C"
     int loader_Android(lua_State *L)
     {
         std::string filename(luaL_checkstring(L, 1));
-        filename.append(".lua");
+        //filename.append(".lua");
         std::string fullName = "assets/"+filename;
         int position = fullName.find(".");
         while(position != std::string::npos) {
             fullName.replace(position, 1, "/");
+            position = fullName.find(".", position+1);
         }
+        fullName.append(".lua");
         CCLog("loader_Android file %s", fullName.c_str());
         CCString* pFileContent = CCString::createWithContentsOfFile(fullName.c_str());
 

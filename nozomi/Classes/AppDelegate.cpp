@@ -43,7 +43,7 @@ bool AppDelegate::applicationDidFinishLaunching()
     CCScriptEngineManager::sharedManager()->setScriptEngine(pEngine);
 
 #if (CC_TARGET_PLATFORM == CC_PLATFORM_ANDROID)
-    pEngine->addSearchPath("assets");
+    //pEngine->addSearchPath("assets");
     //需要实际路径 因为zip 打开的是 整个apk文件 其中lua文件在assets中
     CCString* pstrFileContent = CCString::createWithContentsOfFile("assets/main.lua");
     if (pstrFileContent)
