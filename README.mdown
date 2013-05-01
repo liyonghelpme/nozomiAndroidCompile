@@ -8,3 +8,18 @@ Android apk file 是一个 zip 压缩件
 Lua require 加载file 需要 CocosLuaLoader 帮助从apk 获取lua file
 
 需要注意 所有的lua file 都在 assets  file Directory
+
+编译方法
+---
+
+取消cocos2d 工程中的 Android.mk file 中LuaCocos 代码
+
+调整jni 工程中的 Android.mk 代码
+
+配置NDK_ROOT
+
+./build_native
+
+eclipse中新建工程 编译即可
+
+
