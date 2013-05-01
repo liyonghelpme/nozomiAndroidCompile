@@ -28,12 +28,19 @@ using namespace cocos2d;
 
 extern "C"
 {
+    //替换路径里面的 . 为 xxx/xxx.lua
     int loader_Android(lua_State *L)
     {
         std::string filename(luaL_checkstring(L, 1));
         filename.append(".lua");
+        std::string fullName = "assets/"+filename;
+        int position = fullName.find(".");
+        while(position != std::string::npos) {
+            fullName.replace(position, 1, "/");
+        }
+        CCLog("loader_Android file %s", fullName.c_str());
+        CCString* pFileContent = CCString::createWithContentsOfFile(fullName.c_str());
 
-        CCString* pFileContent = CCString::createWithContentsOfFile(filename.c_str());
 
         if (pFileContent)
         {
