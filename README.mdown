@@ -1,0 +1,10 @@
+android上可以编译版本 
+==================
+
+Android apk file 是一个 zip 压缩件
+
+需要ZipUtil 获取file list name 和 file content
+
+Lua require 加载file 需要 CocosLuaLoader 帮助从apk 获取lua file
+
+需要注意 所有的lua file 都在 assets  file Directory
