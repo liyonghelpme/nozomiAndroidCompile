@@ -241,7 +241,7 @@ int ZEXPORT unzGoToFirstFile64 OF((unzFile file,
   return UNZ_OK if there is no problem
 */
 
-int ZEXPORT unzGoToNextFile OF((unzFile file));
+int ZEXPORT unzGoToNextFile (unzFile file);
 /*
   Set the current file of the zipfile to the next file.
   return UNZ_OK if there is no problem

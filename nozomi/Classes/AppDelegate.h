@@ -2,6 +2,11 @@
 #define __APP_DELEGATE_H__
 
 #include "cocos2d.h"
+#include "AssetsManager.h"
+#include "cocos2d_ext.h"
+using namespace std;
+using namespace cocos2d;
+using namespace extension;
 
 /**
 @brief    The cocos2d Application.
@@ -11,7 +16,10 @@ The reason for implement as private inheritance is to hide some interface call b
 class  AppDelegate : private cocos2d::CCApplication
 {
 public:
+    string pathToSave;
+    void updateFiles();
     AppDelegate();
+    void loadScript();
     virtual ~AppDelegate();
 
     /**

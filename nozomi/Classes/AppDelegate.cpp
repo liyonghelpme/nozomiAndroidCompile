@@ -39,9 +39,10 @@ bool AppDelegate::applicationDidFinishLaunching()
     
 
     // register lua engine
-    CCLuaEngine* pEngine = CCLuaEngine::defaultEngine();
-    CCScriptEngineManager::sharedManager()->setScriptEngine(pEngine);
+    //CCLuaEngine* pEngine = CCLuaEngine::defaultEngine();
+    //CCScriptEngineManager::sharedManager()->setScriptEngine(pEngine);
 
+/*
 #if (CC_TARGET_PLATFORM == CC_PLATFORM_ANDROID)
     //pEngine->addSearchPath("assets");
     //需要实际路径 因为zip 打开的是 整个apk文件 其中lua文件在assets中
@@ -55,6 +56,9 @@ bool AppDelegate::applicationDidFinishLaunching()
     pEngine->addSearchPath(path.substr(0, path.find_last_of("/")).c_str());
     pEngine->executeScriptFile(path.c_str());
 #endif
+*/
+    //脚本自动检测更新
+    updateFiles();
     return true;
 }
 
@@ -72,4 +76,59 @@ void AppDelegate::applicationWillEnterForeground()
     CCDirector::sharedDirector()->startAnimation();
 
     SimpleAudioEngine::sharedEngine()->resumeBackgroundMusic();
+}
+
+
+static AssetsManager *pAssetsManager = NULL;
+void AppDelegate::updateFiles() {
+	pathToSave = CCFileUtils::sharedFileUtils()->getWriteablePath();
+    cout << "pathToSave "<< pathToSave << endl;
+    if(pAssetsManager == NULL) {
+        //CCLOG("pathToSave %s", pathToSave);
+
+		pAssetsManager = new AssetsManager("http://localhost/test1.zip", "http://localhost/version");
+	}
+    //没有脚本更新 或者下载失败
+    bool suc = false;
+    if(pAssetsManager->checkUpdate()) {
+        if(pAssetsManager->update()) {
+		    suc = true;
+            CCLOG("suc runLua file ");
+		}
+    } 
+    loadScript();
+	if(!suc){
+        //如何将cache 目录加入到 路径搜索目录中呢？？
+        /*
+		CCArray *searchPath = CCFileUtils::sharedFileUtils()->getSearchPath();
+		
+		searchPath->addObject(CCString::create(pathToSave));
+		CCFileUtils::sharedFileUtils()->setSearchPath(searchPath);
+        
+		cout << "search Path length " << searchPath->count() << endl;
+		for(int i = 0; i < searchPath->count(); i++) {
+			CCString *path = (CCString*)searchPath->objectAtIndex(i);
+			cout << " searchPath " << path->getCString() << endl;
+		}
+		CCArray *searchRes = CCFileUtils::sharedFileUtils()->getSearchResolutionsOrder();
+        cout << "search resolution " << searchRes->count() << endl;
+
+		for(int i = 0; i < searchRes->count(); i++) {
+			CCString *path = (CCString *)searchRes->objectAtIndex(i);
+			cout << "search Res " << path->getCString() << endl;
+		}
+        */
+
+
+	}
+}
+
+void AppDelegate::loadScript() {
+    CCLuaEngine *pEngine = CCLuaEngine::defaultEngine();
+    CCScriptEngineManager::sharedManager()->setScriptEngine(pEngine);
+
+    pEngine->addSearchPath(pathToSave.c_str());
+    string runLua = pathToSave+"test2.lua";
+    cout << "run lua file " << runLua << endl;
+    pEngine->executeScriptFile(runLua.c_str());
 }
