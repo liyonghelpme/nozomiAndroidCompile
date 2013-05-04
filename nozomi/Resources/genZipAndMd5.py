@@ -8,6 +8,7 @@ def tranverse(cur):
     for i in files:
         name = os.path.join(cur, i)
         if os.path.isdir(name):
+            ret.append(name)#compress file directory
             n = tranverse(name)
             ret += n
         elif name[-4:] == '.lua':

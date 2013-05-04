@@ -128,7 +128,7 @@ void AppDelegate::loadScript() {
     CCScriptEngineManager::sharedManager()->setScriptEngine(pEngine);
 
     pEngine->addSearchPath(pathToSave.c_str());
-    string runLua = pathToSave+"test2.lua";
+    string runLua = pathToSave+"main.lua";
     cout << "run lua file " << runLua << endl;
     pEngine->executeScriptFile(runLua.c_str());
 }
