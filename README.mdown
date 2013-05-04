@@ -22,4 +22,15 @@ Lua require 加载file 需要 CocosLuaLoader 帮助从apk 获取lua file
 
 eclipse中新建工程 编译即可
 
+资源管理下载
+=======
+1.增加AssetsManager
+2.修改AppDelegate
+3.依赖zip 支持
+4.增加生成zip file 和版本 的脚本 genZipAndMd5
+
+genZipAndMd5
+-----
+压缩所有file directory 和 lua file
+
 
