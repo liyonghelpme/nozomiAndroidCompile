@@ -90,7 +90,9 @@ function Soldier:damage(value)
 	end
 	if self.hitpoints <= 0 then
 		self.hitpoints = 0
+        --死亡时清理路径
 		if self.stateInfo.action~="dead" then
+            self:clearAllPath()
 			self:setDeadView()
 		end
 	end
@@ -262,9 +264,9 @@ function Soldier:searchAttack()
             self.setFromToGrid(self.truePath[1], self.truePath[1])
             self:setPathCount()
 
-            print("self Data")
-            print(simpJson:encode(self.gridPath))
-            print(simpJson:encode(self.truePath))
+            --print("self Data")
+            --print(simpJson:encode(self.gridPath))
+            --print(simpJson:encode(self.truePath))
         end	
         --print("test2")
             

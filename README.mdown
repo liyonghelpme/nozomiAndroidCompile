@@ -38,3 +38,24 @@ AppDelegate
 需要根据后台设定更新的 file name version file name
 
 
+战斗页面士兵路径分散算法
+====
+士兵开始寻找目标设定 searchAttack
+----
+清理旧的路径信息
+
+设定gridPath truePath
+
+设定当前位置 和下一个位置
+
+更新world 的路径计数
+
+士兵行走过程中
+-----
+每到达一个true path 点 将上个区间 到当前区间的所有点的pathCount -1
+
+到达目的地后清理 自身的path
+
+如果中途切换移动目标 则清理自身的path
+
+如果士兵死亡也清理自身的path

@@ -270,6 +270,7 @@ function Person:setPathCount()
 end
 function Person:clearAllPath()
     print("clearAllPath")
+    local w = self.scene.mapWorld
     if self.gridPath ~= nil then
         local start = 1
         local finish = #self.gridPath

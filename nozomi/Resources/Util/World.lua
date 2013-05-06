@@ -49,6 +49,9 @@ function World:ctor(cellNum, coff)
 
     --经营场景
     self.scene = nil
+
+    --是否显示调试块
+    self.debug = true
 end
 function World:setScene(s)
     self.scene = s
@@ -104,7 +107,9 @@ function World:showGrid()
             if self.cells[key]['fScore'] ~= nil then
                 --local temp = CCLabelTTF:create(self.cells[key]['fScore'].."", "Arial", 10)
                 local temp = CCSprite:create("block.png")
-                if self.cells[key]['isPath'] and not self.cells[key]['isReal'] then
+                if self.cells[key]['pathCount'] ~= nil and self.cells[key]['pathCount'] > 0 then
+                    temp:setColor(ccc3(255, 255, 0)) 
+                elseif self.cells[key]['isPath'] and not self.cells[key]['isReal'] then
                     temp:setColor(ccc3(0, 255, 0))
                 elseif self.cells[key]['isReal'] then
                     temp:setColor(ccc3(0, 0, 255))
@@ -129,8 +134,7 @@ function World:showGrid()
         end
     end
     self.scene.ground:addChild(self.calGrid, 10000)
-    --是否显示调试块
-    self.debug = false
+
 end
 function World:getKey(x, y)
     return x*self.coff+y

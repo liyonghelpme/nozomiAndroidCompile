@@ -91,8 +91,8 @@ local function main()
         delayCallback(t1+t2, tempLogin)
     end
     
-    CCUserDefault:sharedUserDefault():setStringForKey("username", "TEST6")
-    CCUserDefault:sharedUserDefault():setStringForKey("nickname", "TEST6")
+    CCUserDefault:sharedUserDefault():setStringForKey("username", "TEST1")
+    CCUserDefault:sharedUserDefault():setStringForKey("nickname", "TEST1")
     
     print("CCUserDefault sharedUserDefault setStringForKey")
     runLogoScene()

@@ -39,10 +39,9 @@ bool AppDelegate::applicationDidFinishLaunching()
     
 
     // register lua engine
-    //CCLuaEngine* pEngine = CCLuaEngine::defaultEngine();
-    //CCScriptEngineManager::sharedManager()->setScriptEngine(pEngine);
+    CCLuaEngine* pEngine = CCLuaEngine::defaultEngine();
+    CCScriptEngineManager::sharedManager()->setScriptEngine(pEngine);
 
-/*
 #if (CC_TARGET_PLATFORM == CC_PLATFORM_ANDROID)
     //pEngine->addSearchPath("assets");
     //需要实际路径 因为zip 打开的是 整个apk文件 其中lua文件在assets中
@@ -56,9 +55,8 @@ bool AppDelegate::applicationDidFinishLaunching()
     pEngine->addSearchPath(path.substr(0, path.find_last_of("/")).c_str());
     pEngine->executeScriptFile(path.c_str());
 #endif
-*/
     //脚本自动检测更新
-    updateFiles();
+    //updateFiles();
     return true;
 }
 
