@@ -1,4 +1,4 @@
-network = {baseUrl="http://192.168.3.101:5000/"}
+network = {baseUrl="http://192.168.3.100:5000/"}
 
 -- 默认参数只支持字符串和数字
 network.httpRequest = function (url, callback, setting, delegate)

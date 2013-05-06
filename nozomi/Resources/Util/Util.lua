@@ -232,6 +232,14 @@ function recurSetColor(sprite, color)
 	end
 end
 
+function printArray(arr)
+    local res = ""
+    for k, v in ipairs(arr) do
+        res = res .. v
+    end
+    print(res)
+end
+
 require "Util.Class"
 require "Util.character"
 require "Util.json"

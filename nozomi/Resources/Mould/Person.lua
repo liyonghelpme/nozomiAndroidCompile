@@ -176,27 +176,34 @@ function Person:getTruePath(path, world, mapGrid, fx, fy, tx, ty)
         else --该位置j发生碰撞 则前一个位置是可以到达的
             i = j-1
             j = i + 2
-            table.insert(tempPath, path[i])
+            --路径的网格坐标 以及在path中的编号
+            local info = {path[i][1], path[i][2], i}
+            table.insert(tempPath, info)
         end
     end
     table.insert(tempPath, path[#path])
-    --设定world中网格属性用于调试
     path = tempPath
-    for i=1, #path, 1 do
-        world.cells[world:getKey(path[i][1], path[i][2])]['isReal'] = true
+    --关闭调试功能不调用该函数
+    if world.debug then
+        --设定world中网格属性用于调试
+        for i=1, #path, 1 do
+            world.cells[world:getKey(path[i][1], path[i][2])]['isReal'] = true
+        end
     end
 	    
 	local truePath = {}
+    --当返回的路径长度 = 0 需要clearPathCount 中检测路径
 	if #path==0 then
-		return {{tx, ty}}
+		return {{tx, ty, 1}}
 	end
 	local curGrid = path[1]
 	for i=2, #path-1 do
 		local grid = path[i]
 		local position = mapGrid:convertToPosition(grid[1]/2, grid[2]/2)
-		table.insert(truePath, {position[1], position[2]+mapGrid.sizeY/4})
+		table.insert(truePath, {position[1], position[2]+mapGrid.sizeY/4, position[3]})
 	end
-	table.insert(truePath, {tx, ty})
+    --last path position
+	table.insert(truePath, {tx, ty, #path})
 	return truePath
 end
 		
@@ -224,10 +231,65 @@ function Person:setMoveTarget(tx, ty)
 	end
 end
 
+--士兵 searchAttack 寻找攻击目标 设定网格gridPath路径 和 真实路径truePath
+--setPathCount
+--每次移动两个相邻网格 清理网格之间的所有gridPath 的pathCount 计数
+--clearPathCount
+--当移动到目的地
+--finishPath
+--当中途突然改变方向
+--clearAllPath 清理所有的路径
+function Person:setFromToGrid(f, t)
+    if f ~= nil and t ~= nil then
+        print("setFromToGrid"..f[3].." "..t[3])
+        self.curGrid = f
+        self.nextGrid = t
+    end
+end
+
+function Person:clearPathCount(from, to)
+    local w = self.scene.mapWorld
+    if self.gridPath ~= nil then
+        local start = from[3]
+        local finish = to[3]
+        print("clearPathCount "..start.." "..finish)
+        for i = start, finish, 1 do
+            if i <= #self.gridPath then
+                w:minusPathCount(self.gridPath[i][1], self.gridPath[i][2])
+            end
+        end
+    end
+end
+
+function Person:setPathCount() 
+    print("setPathCount")
+    local w = self.scene.mapWorld
+    for k, v in ipairs(self.gridPath) do
+        w:addPathCount(v[1], v[2]) 
+    end
+end
+function Person:clearAllPath()
+    print("clearAllPath")
+    if self.gridPath ~= nil then
+        local start = 1
+        local finish = #self.gridPath
+        for i = start, finish, 1 do
+            w:minusPathCount(self.gridPath[i][1], self.gridPath[i][2])
+        end
+        self:finishPath()
+    end
+end
+function Person:finishPath()
+    print("finishPath")
+    self.gridPath = nil
+    self.truePath = nil
+end
+
 function Person:update(diff)
 	local stateInfo = self.stateInfo
 	if stateInfo.state == "dead" then
 	end
+    --士兵移动 普通经营页面人物移动
 	if self.state == PersonState.STATE_MOVING then
 		local moveEnd = true
 		if stateInfo.toPoint then
@@ -255,11 +317,20 @@ function Person:update(diff)
 				if delta<1 then moveEnd = false end
 			end
 		end
+        --fromPoint toPoint 
+        --clearFromPoint to toPoint pathCount--
 		if moveEnd then
 			if stateInfo.movePath and #(stateInfo.movePath)>0 then
+                --清理当前开始到结束为止的网格状态
+                self:clearPathCount(self.curGrid, self.nextGrid)
 				local point = table.remove(stateInfo.movePath, 1)
+                print("point is ")
+                print(point)
+                self:setFromToGrid(self.nextGrid, point)
 				self:moveDirect(point[1], point[2])
-			else
+			else --最后一个移动网格
+                self:clearPathCount(self.curGrid, self.nextGrid)
+                self:finishPath()
 				self.state = PersonState.STATE_FREE
 				self.backStateInfo = self.stateInfo
 				self.backTime = self.stateTime

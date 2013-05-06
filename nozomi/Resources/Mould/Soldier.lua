@@ -1,4 +1,5 @@
 require "Mould.Person"
+local simpJson = require "Util.SimpleJson"
 
 
 SoldierHelper = {}
@@ -57,6 +58,14 @@ function Soldier:ctor(sid, setting)
     --设定移动目标之后 等待移动时间 之后再次检测距离
     self.moveTime = 0
     self.moveYet = false
+    --士兵的网格路径
+    self.gridPath = nil
+    --士兵的实际路径 对path的index
+    self.truePath = nil
+    --士兵当前位置的网格编号
+    --士兵下一个位置的网格编号
+    self.curGrid = nil
+    self.nextGrid = nil
 end
 	
 function Soldier:getInitPos()
@@ -224,6 +233,8 @@ end
 function Soldier:executeAttack()
 	self.attackTarget:damage(self.stateInfo.attackValue)
 end
+--设定世界路径拥挤程度
+
 function Soldier:searchAttack()
     local target
     local w = self.scene.mapWorld
@@ -240,10 +251,20 @@ function Soldier:searchAttack()
         --print("test1")
 
         local path, target, lastPoint = w:searchAttack(self.info.range*2, grid.gridFloatX, grid.gridFloatY)
+
         if lastPoint then
             local position = self.scene.mapGrid:convertToPosition(lastPoint[1]/2, lastPoint[2]/2)
             local tx, ty = position[1] , position[2]
             truePath = self:getTruePath(path, w, self.scene.mapGrid, fx, fy, tx, ty)
+            self:clearAllPath()
+            self.gridPath = path
+            self.truePath = truePath
+            self.setFromToGrid(self.truePath[1], self.truePath[1])
+            self:setPathCount()
+
+            print("self Data")
+            print(simpJson:encode(self.gridPath))
+            print(simpJson:encode(self.truePath))
         end	
         --print("test2")
             
@@ -255,6 +276,8 @@ function Soldier:searchAttack()
                 if self.state~=PersonState.STATE_MOVING then
                     self.stateTime = 0
                 end
+                --设定当前阶段的网格开始 结束编号 
+                self:setFromToGrid(firstPoint, firstPoint)
                 self:moveDirect(firstPoint[1], firstPoint[2], true)
             else
                 self:setAttack()

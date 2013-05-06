@@ -286,6 +286,10 @@ function World:calcG(x, y)
     elseif difX > 0 and difY > 0 then
         dist = 14
     end
+    --路径拥挤程度
+    if data['pathCount'] ~= nil then
+        dist = dist + data['pathCount']*15
+    end
     --print("calG "..dist)
 
 
@@ -492,6 +496,20 @@ function World:search()
     return temp
 end
 
+function World:minusPathCount(x, y)
+    local key = self:getKey(x, y)
+    local old = self.cells[key]['pathCount'] or 0
+    if old > 0 then
+        self.cells[key]['pathCount'] = old - 1
+    else
+        print("PathError PathCount-1 < 0") 
+    end
+end
+function World:addPathCount(x, y)
+    local key = self:getKey(x, y)
+    local old = self.cells[key]['pathCount'] or 0
+    self.cells[key]['pathCount'] = old+1
+end
 function World:searchAttack(range, fx, fy)
     self.searchNum = self.searchNum + 1
     if self.searchNum >= self.maxSearchNum then
