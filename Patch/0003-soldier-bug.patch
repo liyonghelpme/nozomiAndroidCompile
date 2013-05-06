@@ -1,0 +1,68 @@
+From 979f275ab7bedab18292d504fc688da838fd8292 Mon Sep 17 00:00:00 2001
+From: liyonghelpme <liyonghelpme@gmail.com>
+Date: Mon, 6 May 2013 19:01:17 +0800
+Subject: [PATCH 3/3] =?UTF-8?q?=E4=BF=AE=E6=AD=A3soldier=E7=9A=84=E4=B8=80?=
+ =?UTF-8?q?=E4=B8=AA=E5=B0=8Fbug?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+---
+ nozomi/Resources/Mould/Person.lua | 4 ++--
+ nozomi/Resources/Util/World.lua   | 2 +-
+ nozomi/Resources/main.lua         | 4 ++--
+ 3 files changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/nozomi/Resources/Mould/Person.lua b/nozomi/Resources/Mould/Person.lua
+index f2d6c0f..8b636b7 100644
+--- a/nozomi/Resources/Mould/Person.lua
++++ b/nozomi/Resources/Mould/Person.lua
+@@ -200,7 +200,7 @@ function Person:getTruePath(path, world, mapGrid, fx, fy, tx, ty)
+ 	for i=2, #path-1 do
+ 		local grid = path[i]
+ 		local position = mapGrid:convertToPosition(grid[1]/2, grid[2]/2)
+-		table.insert(truePath, {position[1], position[2]+mapGrid.sizeY/4, position[3]})
++		table.insert(truePath, {position[1], position[2]+mapGrid.sizeY/4, grid[3]})
+ 	end
+     --last path position
+ 	table.insert(truePath, {tx, ty, #path})
+@@ -272,7 +272,7 @@ function Person:clearAllPath()
+     print("clearAllPath")
+     local w = self.scene.mapWorld
+     if self.gridPath ~= nil then
+-        local start = 1
++        local start = self.curGrid[3] --¥”µ±«∞√ª”–«Â¿Ìµƒ¬∑æ∂ø™ º«Â¿Ì
+         local finish = #self.gridPath
+         for i = start, finish, 1 do
+             w:minusPathCount(self.gridPath[i][1], self.gridPath[i][2])
+diff --git a/nozomi/Resources/Util/World.lua b/nozomi/Resources/Util/World.lua
+index 433cf4a..6b0c61e 100644
+--- a/nozomi/Resources/Util/World.lua
++++ b/nozomi/Resources/Util/World.lua
+@@ -51,7 +51,7 @@ function World:ctor(cellNum, coff)
+     self.scene = nil
+ 
+     --ÊòØÂê¶ÊòæÁ§∫Ë∞ÉËØïÂùó
+-    self.debug = true
++    self.debug = false
+ end
+ function World:setScene(s)
+     self.scene = s
+diff --git a/nozomi/Resources/main.lua b/nozomi/Resources/main.lua
+index 027a4c8..ed25671 100644
+--- a/nozomi/Resources/main.lua
++++ b/nozomi/Resources/main.lua
+@@ -91,8 +91,8 @@ local function main()
+         delayCallback(t1+t2, tempLogin)
+     end
+     
+-    CCUserDefault:sharedUserDefault():setStringForKey("username", "TEST1")
+-    CCUserDefault:sharedUserDefault():setStringForKey("nickname", "TEST1")
++    CCUserDefault:sharedUserDefault():setStringForKey("username", "TEST2")
++    CCUserDefault:sharedUserDefault():setStringForKey("nickname", "TEST2")
+     
+     print("CCUserDefault sharedUserDefault setStringForKey")
+     runLogoScene()
+-- 
+1.8.1.msysgit.1
+

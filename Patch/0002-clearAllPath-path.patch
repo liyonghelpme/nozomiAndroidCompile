@@ -1,0 +1,182 @@
+From 92499d692545f2f85ee886137777bfd03e3471cf Mon Sep 17 00:00:00 2001
+From: liyonghelpme <liyonghelpme@gmail.com>
+Date: Mon, 6 May 2013 18:39:48 +0800
+Subject: [PATCH 2/3] =?UTF-8?q?=E4=BF=AE=E6=AD=A3clearAllPath=20=E4=BB=8E?=
+ =?UTF-8?q?=E5=A3=AB=E5=85=B5=E5=BD=93=E5=89=8D=E7=9A=84path=20=E5=BC=80?=
+ =?UTF-8?q?=E5=A7=8B=E8=BF=9B=E8=A1=8C=E6=B8=85=E7=90=86?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+---
+ README.mdown                       | 21 +++++++++++++++++++++
+ nozomi/Classes/AppDelegate.cpp     |  8 +++-----
+ nozomi/Resources/Mould/Person.lua  |  1 +
+ nozomi/Resources/Mould/Soldier.lua |  8 +++++---
+ nozomi/Resources/Util/World.lua    | 10 +++++++---
+ nozomi/Resources/main.lua          |  4 ++--
+ nozomi/proj.win32/main.cpp         |  2 +-
+ 7 files changed, 40 insertions(+), 14 deletions(-)
+
+diff --git a/README.mdown b/README.mdown
+index 56dae68..a4a16b9 100644
+--- a/README.mdown
++++ b/README.mdown
+@@ -38,3 +38,24 @@ AppDelegate
+ ÐèÒª¸ù¾ÝºóÌ¨Éè¶¨¸üÐÂµÄ file name version file name
+ 
+ 
++Õ½¶·Ò³ÃæÊ¿±øÂ·¾¶·ÖÉ¢Ëã·¨
++====
++Ê¿±ø¿ªÊ¼Ñ°ÕÒÄ¿±êÉè¶¨ searchAttack
++----
++ÇåÀí¾ÉµÄÂ·¾¶ÐÅÏ¢
++
++Éè¶¨gridPath truePath
++
++Éè¶¨µ±Ç°Î»ÖÃ ºÍÏÂÒ»¸öÎ»ÖÃ
++
++¸üÐÂworld µÄÂ·¾¶¼ÆÊý
++
++Ê¿±øÐÐ×ß¹ý³ÌÖÐ
++-----
++Ã¿µ½´ïÒ»¸ötrue path µã ½«ÉÏ¸öÇø¼ä µ½µ±Ç°Çø¼äµÄËùÓÐµãµÄpathCount -1
++
++µ½´ïÄ¿µÄµØºóÇåÀí ×ÔÉíµÄpath
++
++Èç¹ûÖÐÍ¾ÇÐ»»ÒÆ¶¯Ä¿±ê ÔòÇåÀí×ÔÉíµÄpath
++
++Èç¹ûÊ¿±øËÀÍöÒ²ÇåÀí×ÔÉíµÄpath
+diff --git a/nozomi/Classes/AppDelegate.cpp b/nozomi/Classes/AppDelegate.cpp
+index 5c60fec..3259230 100644
+--- a/nozomi/Classes/AppDelegate.cpp
++++ b/nozomi/Classes/AppDelegate.cpp
+@@ -39,10 +39,9 @@ bool AppDelegate::applicationDidFinishLaunching()
+     
+ 
+     // register lua engine
+-    //CCLuaEngine* pEngine = CCLuaEngine::defaultEngine();
+-    //CCScriptEngineManager::sharedManager()->setScriptEngine(pEngine);
++    CCLuaEngine* pEngine = CCLuaEngine::defaultEngine();
++    CCScriptEngineManager::sharedManager()->setScriptEngine(pEngine);
+ 
+-/*
+ #if (CC_TARGET_PLATFORM == CC_PLATFORM_ANDROID)
+     //pEngine->addSearchPath("assets");
+     //ÐèÒªÊµ¼ÊÂ·¾¶ ÒòÎªzip ´ò¿ªµÄÊÇ Õû¸öapkÎÄ¼þ ÆäÖÐluaÎÄ¼þÔÚassetsÖÐ
+@@ -56,9 +55,8 @@ bool AppDelegate::applicationDidFinishLaunching()
+     pEngine->addSearchPath(path.substr(0, path.find_last_of("/")).c_str());
+     pEngine->executeScriptFile(path.c_str());
+ #endif
+-*/
+     //½Å±¾×Ô¶¯¼ì²â¸üÐÂ
+-    updateFiles();
++    //updateFiles();
+     return true;
+ }
+ 
+diff --git a/nozomi/Resources/Mould/Person.lua b/nozomi/Resources/Mould/Person.lua
+index a3c60d2..f2d6c0f 100644
+--- a/nozomi/Resources/Mould/Person.lua
++++ b/nozomi/Resources/Mould/Person.lua
+@@ -270,6 +270,7 @@ function Person:setPathCount()
+ end
+ function Person:clearAllPath()
+     print("clearAllPath")
++    local w = self.scene.mapWorld
+     if self.gridPath ~= nil then
+         local start = 1
+         local finish = #self.gridPath
+diff --git a/nozomi/Resources/Mould/Soldier.lua b/nozomi/Resources/Mould/Soldier.lua
+index ab84734..cf32790 100644
+--- a/nozomi/Resources/Mould/Soldier.lua
++++ b/nozomi/Resources/Mould/Soldier.lua
+@@ -90,7 +90,9 @@ function Soldier:damage(value)
+ 	end
+ 	if self.hitpoints <= 0 then
+ 		self.hitpoints = 0
++        --ËÀÍöÊ±ÇåÀíÂ·¾¶
+ 		if self.stateInfo.action~="dead" then
++            self:clearAllPath()
+ 			self:setDeadView()
+ 		end
+ 	end
+@@ -262,9 +264,9 @@ function Soldier:searchAttack()
+             self.setFromToGrid(self.truePath[1], self.truePath[1])
+             self:setPathCount()
+ 
+-            print("self Data")
+-            print(simpJson:encode(self.gridPath))
+-            print(simpJson:encode(self.truePath))
++            --print("self Data")
++            --print(simpJson:encode(self.gridPath))
++            --print(simpJson:encode(self.truePath))
+         end	
+         --print("test2")
+             
+diff --git a/nozomi/Resources/Util/World.lua b/nozomi/Resources/Util/World.lua
+index 3a245a6..433cf4a 100644
+--- a/nozomi/Resources/Util/World.lua
++++ b/nozomi/Resources/Util/World.lua
+@@ -49,6 +49,9 @@ function World:ctor(cellNum, coff)
+ 
+     --ç»è¥åœºæ™¯
+     self.scene = nil
++
++    --æ˜¯å¦æ˜¾ç¤ºè°ƒè¯•å—
++    self.debug = true
+ end
+ function World:setScene(s)
+     self.scene = s
+@@ -104,7 +107,9 @@ function World:showGrid()
+             if self.cells[key]['fScore'] ~= nil then
+                 --local temp = CCLabelTTF:create(self.cells[key]['fScore'].."", "Arial", 10)
+                 local temp = CCSprite:create("block.png")
+-                if self.cells[key]['isPath'] and not self.cells[key]['isReal'] then
++                if self.cells[key]['pathCount'] ~= nil and self.cells[key]['pathCount'] > 0 then
++                    temp:setColor(ccc3(255, 255, 0)) 
++                elseif self.cells[key]['isPath'] and not self.cells[key]['isReal'] then
+                     temp:setColor(ccc3(0, 255, 0))
+                 elseif self.cells[key]['isReal'] then
+                     temp:setColor(ccc3(0, 0, 255))
+@@ -129,8 +134,7 @@ function World:showGrid()
+         end
+     end
+     self.scene.ground:addChild(self.calGrid, 10000)
+-    --æ˜¯å¦æ˜¾ç¤ºè°ƒè¯•å—
+-    self.debug = false
++
+ end
+ function World:getKey(x, y)
+     return x*self.coff+y
+diff --git a/nozomi/Resources/main.lua b/nozomi/Resources/main.lua
+index aed5860..027a4c8 100644
+--- a/nozomi/Resources/main.lua
++++ b/nozomi/Resources/main.lua
+@@ -91,8 +91,8 @@ local function main()
+         delayCallback(t1+t2, tempLogin)
+     end
+     
+-    CCUserDefault:sharedUserDefault():setStringForKey("username", "TEST6")
+-    CCUserDefault:sharedUserDefault():setStringForKey("nickname", "TEST6")
++    CCUserDefault:sharedUserDefault():setStringForKey("username", "TEST1")
++    CCUserDefault:sharedUserDefault():setStringForKey("nickname", "TEST1")
+     
+     print("CCUserDefault sharedUserDefault setStringForKey")
+     runLogoScene()
+diff --git a/nozomi/proj.win32/main.cpp b/nozomi/proj.win32/main.cpp
+index 9032877..9e2e714 100644
+--- a/nozomi/proj.win32/main.cpp
++++ b/nozomi/proj.win32/main.cpp
+@@ -23,7 +23,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
+     // create the application instance
+     AppDelegate app;
+     CCEGLView* eglView = CCEGLView::sharedOpenGLView();
+-    eglView->setFrameSize(1024, 768);
++    eglView->setFrameSize(960, 640);
+ 
+     int ret = CCApplication::sharedApplication()->run();
+ 
+-- 
+1.8.1.msysgit.1
+
