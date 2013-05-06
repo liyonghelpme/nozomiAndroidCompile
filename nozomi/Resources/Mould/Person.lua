@@ -200,7 +200,7 @@ function Person:getTruePath(path, world, mapGrid, fx, fy, tx, ty)
 	for i=2, #path-1 do
 		local grid = path[i]
 		local position = mapGrid:convertToPosition(grid[1]/2, grid[2]/2)
-		table.insert(truePath, {position[1], position[2]+mapGrid.sizeY/4, position[3]})
+		table.insert(truePath, {position[1], position[2]+mapGrid.sizeY/4, grid[3]})
 	end
     --last path position
 	table.insert(truePath, {tx, ty, #path})
@@ -272,7 +272,7 @@ function Person:clearAllPath()
     print("clearAllPath")
     local w = self.scene.mapWorld
     if self.gridPath ~= nil then
-        local start = 1
+        local start = self.curGrid[3] --从当前没有清理的路径开始清理
         local finish = #self.gridPath
         for i = start, finish, 1 do
             w:minusPathCount(self.gridPath[i][1], self.gridPath[i][2])
