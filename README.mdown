@@ -33,4 +33,8 @@ genZipAndMd5
 -----
 压缩所有file directory 和 lua file
 
+AppDelegate
+----
+需要根据后台设定更新的 file name version file name
+
 
