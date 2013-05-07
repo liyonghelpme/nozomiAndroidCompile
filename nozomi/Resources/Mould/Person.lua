@@ -1,4 +1,5 @@
 require "Util.Class"
+local simpleJson = require "Util.SimpleJson"
 
 Person = class()
 
@@ -165,9 +166,11 @@ end
 --检测非相邻点之间是否存在障碍物
 --将坐标从affine网格坐标转化成笛卡尔坐标
 function Person:getTruePath(path, world, mapGrid, fx, fy, tx, ty)
+    local oldPath = path
 	local i = 1
     local j = 3
-	local tempPath = {path[1]}
+    local info = {path[1][1], path[1][2], 1}
+	local tempPath = {info}
     while j <= #path do
         local ray = Ray.new(path[i], path[j], world)
         local ret = ray:checkCollision()
@@ -181,7 +184,13 @@ function Person:getTruePath(path, world, mapGrid, fx, fy, tx, ty)
             table.insert(tempPath, info)
         end
     end
-    table.insert(tempPath, path[#path])
+
+    local info = {path[#path][1], path[#path][2], #path}
+    table.insert(tempPath, info)
+
+    print("getTruePath")
+    print(simpleJson:encode(tempPath))
+
     path = tempPath
     --关闭调试功能不调用该函数
     if world.debug then
@@ -196,14 +205,16 @@ function Person:getTruePath(path, world, mapGrid, fx, fy, tx, ty)
 	if #path==0 then
 		return {{tx, ty, 1}}
 	end
-	local curGrid = path[1]
+	--local curGrid = path[1]
 	for i=2, #path-1 do
 		local grid = path[i]
 		local position = mapGrid:convertToPosition(grid[1]/2, grid[2]/2)
 		table.insert(truePath, {position[1], position[2]+mapGrid.sizeY/4, grid[3]})
 	end
     --last path position
-	table.insert(truePath, {tx, ty, #path})
+	table.insert(truePath, {tx, ty, #oldPath})
+    print("world truePath is")
+    print(simpleJson:encode(truePath))
 	return truePath
 end
 		
@@ -248,6 +259,8 @@ function Person:setFromToGrid(f, t)
 end
 
 function Person:clearPathCount(from, to)
+    --中间不清理路径信息 直到走到目的地才清理
+    --[[
     local w = self.scene.mapWorld
     if self.gridPath ~= nil then
         local start = from[3]
@@ -259,24 +272,39 @@ function Person:clearPathCount(from, to)
             end
         end
     end
+    ]]--
 end
 
 function Person:setPathCount() 
     print("setPathCount")
     local w = self.scene.mapWorld
+    --只设定最后一个位置的path count
+    local l = #self.gridPath
+    w:addPathCount(self.gridPath[l][1], self.gridPath[l][2])
+
+    --[[
     for k, v in ipairs(self.gridPath) do
         w:addPathCount(v[1], v[2]) 
     end
+    ]]--
+
 end
+--清理所有的路径信息
 function Person:clearAllPath()
     print("clearAllPath")
     local w = self.scene.mapWorld
     if self.gridPath ~= nil then
-        local start = self.curGrid[3] --从当前没有清理的路径开始清理
+        local l = #self.gridPath
+        w:minusPathCount(self.gridPath[l][1], self.gridPath[l][2])
+        --[[
+        local start = 1 --从当前没有清理的路径开始清理
         local finish = #self.gridPath
+
+        print("AllPath length " .. #self.gridPath .." "..start)
         for i = start, finish, 1 do
             w:minusPathCount(self.gridPath[i][1], self.gridPath[i][2])
         end
+        ]]--
         self:finishPath()
     end
 end
@@ -330,8 +358,10 @@ function Person:update(diff)
                 self:setFromToGrid(self.nextGrid, point)
 				self:moveDirect(point[1], point[2])
 			else --最后一个移动网格
-                self:clearPathCount(self.curGrid, self.nextGrid)
-                self:finishPath()
+                --在下次移动开始的时候清理路径信息 则能保证防止攻击建筑物的路径冲突
+                --self:clearPathCount(self.curGrid, self.nextGrid)
+                --self:finishPath()
+
 				self.state = PersonState.STATE_FREE
 				self.backStateInfo = self.stateInfo
 				self.backTime = self.stateTime

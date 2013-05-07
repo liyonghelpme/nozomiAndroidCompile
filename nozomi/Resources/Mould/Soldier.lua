@@ -261,12 +261,15 @@ function Soldier:searchAttack()
             self:clearAllPath()
             self.gridPath = path
             self.truePath = truePath
-            self.setFromToGrid(self.truePath[1], self.truePath[1])
+            --第一个顶点
+            self.setFromToGrid({0, 0, 1}, self.truePath[1])
             self:setPathCount()
 
-            --print("self Data")
-            --print(simpJson:encode(self.gridPath))
-            --print(simpJson:encode(self.truePath))
+            print("self path Data")
+            print(simpJson:encode(self.gridPath))
+            print(simpJson:encode(self.truePath))
+            w:showGrid()
+
         end	
         --print("test2")
             
@@ -279,7 +282,7 @@ function Soldier:searchAttack()
                     self.stateTime = 0
                 end
                 --设定当前阶段的网格开始 结束编号 
-                self:setFromToGrid(firstPoint, firstPoint)
+                self:setFromToGrid({0, 0, 1}, firstPoint)
                 self:moveDirect(firstPoint[1], firstPoint[2], true)
             else
                 self:setAttack()

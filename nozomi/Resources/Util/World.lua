@@ -51,7 +51,7 @@ function World:ctor(cellNum, coff)
     self.scene = nil
 
     --是否显示调试块
-    self.debug = false
+    self.debug = true
 end
 function World:setScene(s)
     self.scene = s
@@ -109,6 +109,11 @@ function World:showGrid()
                 local temp = CCSprite:create("block.png")
                 if self.cells[key]['pathCount'] ~= nil and self.cells[key]['pathCount'] > 0 then
                     temp:setColor(ccc3(255, 255, 0)) 
+                    local word = CCLabelTTF:create(""..self.cells[key]['pathCount'], "Arial", 30)
+                    word:setColor(ccc3(255, 0, 255))
+                    word:setPosition(23, 17.5)
+                    word:setAnchorPoint(ccp(0.5, 0.5))
+                    temp:addChild(word)
                 elseif self.cells[key]['isPath'] and not self.cells[key]['isReal'] then
                     temp:setColor(ccc3(0, 255, 0))
                 elseif self.cells[key]['isReal'] then
@@ -121,11 +126,13 @@ function World:showGrid()
                 temp:setScaleX(46/cs.width)
                 temp:setScaleY(34.5/cs.height)
                 self.calGrid:addChild(temp)
+                --[[
                 local word = CCLabelTTF:create(""..self.cells[key]['fScore'], "Arial", 20)
                 word:setColor(ccc3(255, 0, 0))
                 word:setPosition(23, 17.5)
                 word:setAnchorPoint(ccp(0.5, 0.5))
                 temp:addChild(word)
+                ]]--
                 --我的坐标x y 轴 和 游戏中的 x y 轴相反
                 local nx, ny = affineToNormal(y, x)
                 local px, py = normalToCartesian(nx, ny)
@@ -235,7 +242,7 @@ function World:setBuild(x, y, size, btype, obj)
 			end
 		end
 	end
-    self:showGrid()
+    --self:showGrid()
 end
 
 --清理建筑物的网格

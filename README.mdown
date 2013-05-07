@@ -59,3 +59,9 @@ AppDelegate
 如果中途切换移动目标 则清理自身的path
 
 如果士兵死亡也清理自身的path
+
+打补丁
+----
+patch -p1 < xxx.patch
+
+如果存在冲突会有冲突file 生成
