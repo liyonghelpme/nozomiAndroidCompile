@@ -1,0 +1,84 @@
+From 2023310e3acbccaf4696ae174680240c844c477a Mon Sep 17 00:00:00 2001
+From: liyonghelpme <liyonghelpme@gmail.com>
+Date: Tue, 7 May 2013 09:21:14 +0800
+Subject: [PATCH 2/2] =?UTF-8?q?=E5=85=B3=E9=97=AD=E8=B0=83=E8=AF=95=E6=A8?=
+ =?UTF-8?q?=A1=E5=BC=8F=20person=20=E5=92=8C=20world=20=E4=B8=8D=E6=98=BE?=
+ =?UTF-8?q?=E7=A4=BA=E4=BF=A1=E6=81=AF?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+---
+ nozomi/Resources/Mould/Person.lua | 21 ++++++++++++++-------
+ nozomi/Resources/Util/World.lua   |  2 +-
+ 2 files changed, 15 insertions(+), 8 deletions(-)
+
+diff --git a/nozomi/Resources/Mould/Person.lua b/nozomi/Resources/Mould/Person.lua
+index fb0bc49..e77824c 100644
+--- a/nozomi/Resources/Mould/Person.lua
++++ b/nozomi/Resources/Mould/Person.lua
+@@ -12,6 +12,8 @@ function Person:ctor()
+ 	self.displayState = {direction=1}
+ 	self.direction = 1
+ 	self.viewInfo = {scale=1, x=0, y=0}
++
++    self.debug = false
+ end
+ 
+ function Person:getMoveArroundPosition(build)
+@@ -187,9 +189,10 @@ function Person:getTruePath(path, world, mapGrid, fx, fy, tx, ty)
+ 
+     local info = {path[#path][1], path[#path][2], #path}
+     table.insert(tempPath, info)
+-
+-    print("getTruePath")
+-    print(simpleJson:encode(tempPath))
++    if self.debug then
++        print("getTruePath")
++        print(simpleJson:encode(tempPath))
++    end
+ 
+     path = tempPath
+     --πÿ±’µ˜ ‘π¶ƒ‹≤ªµ˜”√∏√∫Ø ˝
+@@ -213,8 +216,10 @@ function Person:getTruePath(path, world, mapGrid, fx, fy, tx, ty)
+ 	end
+     --last path position
+ 	table.insert(truePath, {tx, ty, #oldPath})
+-    print("world truePath is")
+-    print(simpleJson:encode(truePath))
++    if self.debug then
++        print("world truePath is")
++        print(simpleJson:encode(truePath))
++    end
+ 	return truePath
+ end
+ 		
+@@ -353,8 +358,10 @@ function Person:update(diff)
+                 --«Â¿Ìµ±«∞ø™ ºµΩΩ· ¯Œ™÷πµƒÕ¯∏Ò◊¥Ã¨
+                 self:clearPathCount(self.curGrid, self.nextGrid)
+ 				local point = table.remove(stateInfo.movePath, 1)
+-                print("point is ")
+-                print(point)
++                if self.debug then
++                    print("point is ")
++                    print(point)
++                end
+                 self:setFromToGrid(self.nextGrid, point)
+ 				self:moveDirect(point[1], point[2])
+ 			else --◊Ó∫Û“ª∏ˆ“∆∂ØÕ¯∏Ò
+diff --git a/nozomi/Resources/Util/World.lua b/nozomi/Resources/Util/World.lua
+index 02e96fe..badfd35 100644
+--- a/nozomi/Resources/Util/World.lua
++++ b/nozomi/Resources/Util/World.lua
+@@ -51,7 +51,7 @@ function World:ctor(cellNum, coff)
+     self.scene = nil
+ 
+     --ÊòØÂê¶ÊòæÁ§∫Ë∞ÉËØïÂùó
+-    self.debug = true
++    self.debug = false
+ end
+ function World:setScene(s)
+     self.scene = s
+-- 
+1.8.1.msysgit.1
+
