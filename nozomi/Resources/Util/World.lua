@@ -51,7 +51,7 @@ function World:ctor(cellNum, coff)
     self.scene = nil
 
     --是否显示调试块
-    self.debug = true
+    self.debug = false
 end
 function World:setScene(s)
     self.scene = s

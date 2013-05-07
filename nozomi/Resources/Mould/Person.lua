@@ -12,6 +12,8 @@ function Person:ctor()
 	self.displayState = {direction=1}
 	self.direction = 1
 	self.viewInfo = {scale=1, x=0, y=0}
+
+    self.debug = false
 end
 
 function Person:getMoveArroundPosition(build)
@@ -187,9 +189,10 @@ function Person:getTruePath(path, world, mapGrid, fx, fy, tx, ty)
 
     local info = {path[#path][1], path[#path][2], #path}
     table.insert(tempPath, info)
-
-    print("getTruePath")
-    print(simpleJson:encode(tempPath))
+    if self.debug then
+        print("getTruePath")
+        print(simpleJson:encode(tempPath))
+    end
 
     path = tempPath
     --关闭调试功能不调用该函数
@@ -213,8 +216,10 @@ function Person:getTruePath(path, world, mapGrid, fx, fy, tx, ty)
 	end
     --last path position
 	table.insert(truePath, {tx, ty, #oldPath})
-    print("world truePath is")
-    print(simpleJson:encode(truePath))
+    if self.debug then
+        print("world truePath is")
+        print(simpleJson:encode(truePath))
+    end
 	return truePath
 end
 		
@@ -353,8 +358,10 @@ function Person:update(diff)
                 --清理当前开始到结束为止的网格状态
                 self:clearPathCount(self.curGrid, self.nextGrid)
 				local point = table.remove(stateInfo.movePath, 1)
-                print("point is ")
-                print(point)
+                if self.debug then
+                    print("point is ")
+                    print(point)
+                end
                 self:setFromToGrid(self.nextGrid, point)
 				self:moveDirect(point[1], point[2])
 			else --最后一个移动网格
