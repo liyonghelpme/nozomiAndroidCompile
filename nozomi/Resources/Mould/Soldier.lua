@@ -253,8 +253,8 @@ function Soldier:searchAttack()
         w:clearWorld()
         w:putStart(startPoint[1], startPoint[2])
         --print("test1")
-
-        local path, target, lastPoint = w:searchAttack(self.info.range*2, grid.gridFloatX, grid.gridFloatY)
+        --传入士兵当前的位置 用于计算射程
+        local path, target, lastPoint = w:searchAttack(self.info.range*2, grid.gridFloatX, grid.gridFloatY, fx, fy)
 
         if lastPoint then
             local position = self.scene.mapGrid:convertToPosition(lastPoint[1]/2, lastPoint[2]/2)
@@ -267,9 +267,11 @@ function Soldier:searchAttack()
             self.setFromToGrid({0, 0, 1}, self.truePath[1])
             self:setPathCount()
 
-            --print("self path Data")
-            --print(simpJson:encode(self.gridPath))
-            --print(simpJson:encode(self.truePath))
+            if self.debug then
+                print("self path Data")
+                print(simpJson:encode(self.gridPath))
+                print(simpJson:encode(self.truePath))
+            end
             w:showGrid()
 
         end	

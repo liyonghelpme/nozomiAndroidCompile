@@ -13,6 +13,7 @@ function Person:ctor()
 	self.direction = 1
 	self.viewInfo = {scale=1, x=0, y=0}
 	self.moveScale = 1
+    self.debug = false
 end
 
 function Person:setMoveScale(scale)
@@ -246,12 +247,24 @@ function Person:setMoveTarget(tx, ty)
 	local endPoint = {agrid.gridPosX, agrid.gridPosY}
 	if self.info.unitType==1 and (startPoint[1]~=endPoint[1] or startPoint[2]~=endPoint[2]) then
 		local w = self.scene.mapWorld
-		w:clearWorld()
+		--w:clearWorld()
 		w:putStart(startPoint[1], startPoint[2])
 		w:putEnd(endPoint[1], endPoint[2])
 		local path = w:search(startPoint, endPoint)
         --local truePath = path
 		local truePath = self:getTruePath(path, w, self.scene.mapGrid, fx, fy, tx, ty)
+
+        --设定路径点逻辑 开始下次寻路之前 清理当前的路径点信息
+        self:clearAllPath()
+        self.gridPath = path
+        self.truePath = truePath
+        --第一个顶点
+        self.setFromToGrid({0, 0, 1}, self.truePath[1])
+        self:setPathCount()
+        w:showGrid()
+
+
+
 		local firstPoint = table.remove(truePath, 1)
 		self.stateInfo = {movePath = truePath}
 		self.state = PersonState.STATE_MOVING
@@ -271,7 +284,9 @@ end
 --clearAllPath 清理所有的路径
 function Person:setFromToGrid(f, t)
     if f ~= nil and t ~= nil then
-        --print("setFromToGrid"..f[3].." "..t[3])
+        if self.debug then
+            print("setFromToGrid"..f[3].." "..t[3])
+        end
         self.curGrid = f
         self.nextGrid = t
     end
@@ -295,7 +310,9 @@ function Person:clearPathCount(from, to)
 end
 
 function Person:setPathCount() 
-    --print("setPathCount")
+    if self.debug then
+        print("setPathCount")
+    end
     local w = self.scene.mapWorld
     --只设定最后一个位置的path count
     local l = #self.gridPath

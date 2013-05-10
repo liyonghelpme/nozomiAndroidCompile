@@ -59,7 +59,7 @@ local function main()
     CCUserDefault:sharedUserDefault():setStringForKey("nickname", "TEST6")
     
     --runLogoScene()
-    UserData.noPerson = true
+    UserData.noPerson = false
     display.runScene(LoadingScene)
     --require "Scene.TestScene"
     --display.runScene(TestScene.create())

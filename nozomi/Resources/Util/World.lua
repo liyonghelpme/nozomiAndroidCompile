@@ -3,6 +3,7 @@
 
 require "Util.Class"
 require "Util.heapq"
+local simpleJson =  require "Util.SimpleJson"
 
 World = class()
 
@@ -51,7 +52,7 @@ function World:ctor(cellNum, coff)
     self.scene = nil
 
     --是否显示调试块
-    self.debug = false
+    self.debug = true
 end
 
 function World:setScene(s)
@@ -74,12 +75,25 @@ end
 function round(x)
     return math.floor(x+0.5)
 end
+--实际坐标 转化成 网格编号 
 function cartesianToNormal(x, y)
     return round(x/23), round(y/17.25)
 end
 function normalToAffine(nx, ny)
     return round((nx+ny)/2), round((ny-nx)/2)
 end
+
+--用于计算当前位置和攻击范围的关系
+--返回浮点normal 网格坐标
+function cartesianToNormalFloat(x, y)
+    return (x/23), (y/17.25)
+end
+
+--返回浮点affine 网格坐标  
+function normalToAffineFloat(nx, ny)
+    return (nx+ny)/2, (ny-nx)/2
+end
+
 function normalToCartesian(nx, ny)
     return nx*23, ny*17.25
 end
@@ -180,19 +194,24 @@ function World:putWall(x, y)
     self.cells[self:getKey(x, y)]['state'] = 'Wall'
 end
 
+--设定Grid
 function World:clearGrids(x, y, size)
 	for i=1, size do
 		for j=1, size do
-			self.cells[self:getKey(x-1+i, y-1+j)]['state'] = nil
+            local key = self:getKey(x-1+i, y-1+j)
+			self.cells[key]['state'] = nil
+            self.cells[key]['obj'] = nil
 		end
 	end
 end
 
 --陷阱 城墙 装饰
-function World:setGrids(x, y, size)
+function World:setGrids(x, y, size, obj)
 	for i=1, size do
 		for j=1, size do
-			self.cells[self:getKey(x-1+i, y-1+j)]['state'] = 'Wall'
+            local key = self:getKey(x-1+i, y-1+j)
+			self.cells[key]['state'] = 'Wall'
+            self.cells[key]['obj'] = obj
 		end
 	end
 end
@@ -521,7 +540,8 @@ function World:addPathCount(x, y)
     local old = self.cells[key]['pathCount'] or 0
     self.cells[key]['pathCount'] = old+1
 end
-function World:searchAttack(range, fx, fy)
+--士兵当前的位置坐标 solX solY
+function World:searchAttack(range, fx, fy, solX, solY)
     self.searchNum = self.searchNum + 1
     if self.searchNum >= self.maxSearchNum then
         self.searchYet = true
@@ -575,6 +595,7 @@ function World:searchAttack(range, fx, fy)
         if #(possible) > 0 then
             local point = table.remove(possible) --这里可以加入随机性 在多个可能的点中选择一个点 用于改善路径的效果 
             local x, y = self:getXY(point)
+            --当前点到建筑物距离 小于 士兵的射程
             local prevGrid = self.prevGrids[self:getKey(x, y)]
             if prevGrid and prevGrid[1][1]<=range then
             	prevGrid = prevGrid[1]
@@ -591,8 +612,10 @@ function World:searchAttack(range, fx, fy)
 	            	lastPoint = {zx, zx*ry/rx}
 	            end
             	parent = self.cells[self:getKey(x, y)]['parent']
+                --起始点在射程内 不用移动
             	if x==self.startPoint[1] and y==self.startPoint[2] then
             		dx, dy = math.abs(bx-prevGrid[2][1])-fsize-1, math.abs(by-prevGrid[2][2])-fsize-1
+                    --射程内 不用路径
             		if (dx<0 and dy<=range) or (dy<0 and dx<=range) or (dx>=0 and dy>=0 and dx*dx+dy*dy<=range*range) then
             			self.searchType = nil
             			self.endPoint = nil
@@ -605,6 +628,7 @@ function World:searchAttack(range, fx, fy)
             	if y<prevGrid[2][2] then
             		lastPoint[2] = 1-lastPoint[2]
             	end
+                --移动目标
             	lastPoint = {x+lastPoint[1], y+lastPoint[2]}
             	target = prevGrid[4]
                 break
@@ -617,11 +641,19 @@ function World:searchAttack(range, fx, fy)
     local path = {}
     --local parent = self.cells[self:getKey(self.endPoint[1], self.endPoint[2])]['parent']
     --print("getPath", parent)
+    --得到路径目标 攻击对象 最后一个网格内随机点
+    --path = {{x, y}, {x, y}, {x, y}}
+    
     while parent ~= nil do
         local x, y = self:getXY(parent)
         table.insert(path, {x, y})
+        self.cells[parent]['isPath'] = true
         if x == self.startPoint[1] and y == self.startPoint[2] then
-        
+            break
+        end
+          
+        --[[
+        if x == self.startPoint[1] and y == self.startPoint[2] then
         	if tempStart[1] or tempStart[2] then
         		table.insert(self.path, {tempStart[1] or self.startPoint[1], tempStart[2] or self.startPoint[2]})
         	end
@@ -630,16 +662,106 @@ function World:searchAttack(range, fx, fy)
             self.cells[parent]['isPath'] = true
             table.insert(self.path, {x, y})
         end
+        --]]
         parent = self.cells[parent]["parent"]
     end
     
+    
     local temp = {}
+    local findWall = false
+    local wallX = 0
+    local wallY = 0
+    local wallObj = nil
     for i = #path, 1, -1 do
         table.insert(temp, path[i])
+        local key = self:getKey(path[i][1], path[i][2])
+        local data = self.cells[key]
+        --如果路径上面有城墙 则 停止
+        if data['state'] == 'Wall' then
+            print("findWall Here")
+            print(data["obj"])
+            findWall = true
+            wallX = path[i][1]
+            wallY = path[i][2]
+            wallObj = data['obj']
+            break
+        end
         --print(path[i][1], path[i][2])
     end
+
+    --路径中间有城墙
+    --攻击范围 0.8 属于affine 空间
+    print("findWall")
+    print(findWall)
+    --使用affine 坐标计算位置差值
+    if findWall then
+        local key = self:getKey(wallX, wallY)
+        local wpx, wpy = wallX, wallY
+        local solAffX, solAffY = cartesianToNormalFloat(solX, solY)
+        solAffX, solAffY = normalToAffineFloat(solAffX, solAffY)
+        --local wpx, wpy = affineToNormal(wallX, wallY)
+        --wpx, wpy = normalToCartesian(wpx, wpy)
+        print("wallpos ")
+        --print(wallX, wallY)
+        print(wpx, wpy)
+        print(range)
+
+        --起点在攻击范围圆内
+        local dx = solAffX - wpx 
+        local dy = solAffY - wpy
+        --只有两个以下的顶点
+        if dx*dx+dy*dy <= range*range or #temp <= 2 then
+            temp = {}
+            target = wallObj 
+
+            --return round(x/23), round(y/17.25)
+        --FIXME:
+            lastPoint = {0, 0} 
+        --起点在圆外  判断某个网格是否边界网格 
+        --部分顶点在 射程范围外
+        --部分顶点在射程范围内
+        else
+            --2个以上的顶点
+            local stopGrid = math.max(#temp-1, 1)
+            for i = #temp-1, 1, -1 do
+                local x, y = temp[i][1], temp[i][2]
+                --x, y = affineToNormal(x, y)
+                --x, y = normalToCartesian(x, y)
+                print("affine distance")
+                local dx = x - wpx
+                local dy = y - wpy
+                print(wpx, wpy)
+                print(x, y)
+                print(dx, dy)
+                if dx*dx+dy*dy > range*range then
+                    stopGrid = math.min(i + 1, stopGrid)
+                    break
+                end
+            end
+            --移除后面的顶点
+            for i = #temp, stopGrid+1, -1 do
+                table.remove(temp, i)
+            end
+            target = wallObj
+            local x, y = affineToNormal(temp[stopGrid][1], temp[stopGrid][2])
+            x, y = normalToCartesian(x, y)
+            --网格内随机一定位置
+            local rx = math.random()*23-11.5
+            local ry = math.random()*17.25-17.25/2
+            
+            lastPoint = {temp[stopGrid][1], temp[stopGrid][2]}
+        end
+    end
+
+    --反向路径 temp 判定是否有
     self.endPoint = nil
     self.searchType = nil
+
+    print("world searchAttack target ")
+    print(simpleJson:encode(temp))
+    print(target)
+    print(simpleJson:encode(lastPoint))
+    --路径 攻击目标 路径最后的位置点
     return temp, target, lastPoint
 end
 
