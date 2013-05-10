@@ -227,10 +227,10 @@ function BattleMenuLayer:initBottom()
 	local items = {}
     for i=1, 10 do
         local num = SoldierLogic.getSoldierNumber(i) or 0
-        if num>0 then
+        --if num>0 then
             --SoldierLogic.getSoldierNumber(i)
-			table.insert(items, {id=i, num=num, level=UserData.researchLevel[i], type="soldier", delegate=self})
-        end
+		table.insert(items, {id=i, num=200, level=UserData.researchLevel[i], type="soldier", delegate=self})
+        --end
     end
 	local length = #items
 	local movable = false
