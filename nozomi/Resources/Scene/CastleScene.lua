@@ -451,9 +451,11 @@ function OperationScene:initData(initInfo)
         UserData.crystal = initInfo.crystal
         UserData.initLevel(initInfo.ulevel, initInfo.exp)
         UserData.obstacleTime = timer.getTime(initInfo.obstacleTime)
+        --[[
         if getParam("switchGuideOpen", 0)~=0 then
             initInfo.guide = 0
         end
+        ]]--
         local guideValue = initInfo.guide
         if guideValue==0 then
             GuideLogic.init(1, nil, self)
