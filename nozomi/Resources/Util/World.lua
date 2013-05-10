@@ -53,6 +53,10 @@ function World:ctor(cellNum, coff)
 
     --是否显示调试块
     self.debug = true
+
+    --通过大网格记录最近的建筑物 来帮助searchAttack 计算HScore
+    --80*80 = 20*20
+    self.bigCoff = 4
 end
 
 function World:setScene(s)
@@ -116,13 +120,44 @@ function World:showGrid()
     end
     self.calGrid = CCNode:create()
     self.calGrid:setPosition(0, 0)
+
+    local totalX = math.ceil(self.cellNum/self.bigCoff)
+    local totalY = math.ceil(self.cellNum/self.bigCoff)
+    for x = 1, totalX, 1 do
+        for y = 1, totalY, 1 do
+            local key = self:getKey(x, y)
+            if self.bigGrid[key]['nearObj'] ~= nil then
+                local cx, cy = self:getBigCenter(x, y)
+                local nx, ny = affineToNormal(cx, cy)
+                local px, py = normalToCartesian(nx, ny)
+                local nearX, nearY = self.bigGrid[key]['nearX'], self.bigGrid[key]['nearY']
+                nearX, nearY = affineToNormal(nearX, nearY)
+                nearX, nearY = normalToCartesian(nearX, nearY)
+                local dx, dy = nearX-px, nearY-py
+                local dist = math.sqrt(dx*dx+dy*dy)
+                local angle = math.atan2(dy, dx)
+
+                local temp = CCSprite:create("block.png")
+                local cs = temp:getContentSize()
+
+                temp:setAnchorPoint(ccp(0.5, 0.5))
+                temp:setScaleX(dist/cs.width)
+                temp:setRotation(angle)
+
+                temp:setPosition(px+zx, py+zy+17.25)
+            end
+        end
+    end
+
     for x = 1, self.cellNum, 1 do
         for y = 1, self.cellNum, 1 do
             local key = self:getKey(x, y)
-            if self.cells[key]['fScore'] ~= nil then
+            if self.cells[key]['hScore'] ~= nil then
                 --local temp = CCLabelTTF:create(self.cells[key]['fScore'].."", "Arial", 10)
                 local temp = CCSprite:create("block.png")
+                local hasPathCount = false
                 if self.cells[key]['pathCount'] ~= nil and self.cells[key]['pathCount'] > 0 then
+                    hasPathCount = true
                     temp:setColor(ccc3(255, 255, 0)) 
                     local word = CCLabelTTF:create(""..self.cells[key]['pathCount'], "Arial", 30)
                     word:setColor(ccc3(255, 0, 255))
@@ -141,13 +176,15 @@ function World:showGrid()
                 temp:setScaleX(46/cs.width)
                 temp:setScaleY(34.5/cs.height)
                 self.calGrid:addChild(temp)
-                --[[
-                local word = CCLabelTTF:create(""..self.cells[key]['fScore'], "Arial", 20)
-                word:setColor(ccc3(255, 0, 0))
-                word:setPosition(23, 17.5)
-                word:setAnchorPoint(ccp(0.5, 0.5))
-                temp:addChild(word)
-                ]]--
+                
+                --显示每个路径点预测的值
+                if not hasPathCount then
+                    local word = CCLabelTTF:create(""..self.cells[key]['hScore'], "Arial", 20)
+                    word:setColor(ccc3(255, 0, 0))
+                    word:setPosition(23, 17.5)
+                    word:setAnchorPoint(ccp(0.5, 0.5))
+                    temp:addChild(word)
+                end
                 --我的坐标x y 轴 和 游戏中的 x y 轴相反
                 local nx, ny = affineToNormal(y, x)
                 local px, py = normalToCartesian(nx, ny)
@@ -171,11 +208,27 @@ function World:initCell()
     self.cells = {}
     self.walls = {}
     self.path = {}
+    self.bigGrid = {}--x/4 y/4 --->bigId
+    self.buildToBig = {} --每个建筑物作为 某个大网格的最近建筑物 对应的这些大网格的列表
+
+    --nearest --> building
+    local totalX = math.ceil(self.cellNum/self.bigCoff)
+    local totalY = math.ceil(self.cellNum/self.bigCoff)
+    for i=1, totalX, 1 do
+        for j=1, totalY, 1 do
+            local key = self:getKey(i, j)
+            self.bigGrid[key] = {}
+        end
+    end
+
+    
+
     for x = 1, self.cellNum, 1 do
         for y = 1, self.cellNum, 1 do
             self.cells[x*self.coff+y] = {state=nil, fScore=nil, gScore=nil, hScore=nil, parent=nil, isPath=nil, isReal=nil}
         end
     end
+
     for i = 0, self.cellNum+1, 1 do
         self.cells[0*self.coff+i] = {state='Solid', fScore=nil, gScore=nil, hScore=nil, parent=nil}
         self.cells[i*self.coff+0] = {state='Solid', fScore=nil, gScore=nil, hScore=nil, parent=nil}
@@ -219,16 +272,76 @@ end
 local function compareDis(a, b)
 	return a[1] < b[1]
 end
+--1 2 3 4 ---> 1
+function World:smallToBig(x, y)
+    return math.floor((x-1)/self.bigCoff)+1, math.floor((y-1)/self.bigCoff)+1
+end
+--得到大网格的中心位置 对应的小网格编号 浮点数 affine坐标
+function World:getBigCenter(x, y)
+    return (x-1)*self.bigCoff+1+self.bigCoff/2, (y-1)*self.bigCoff+1+self.bigCoff/2
+end
 
 --普通 建筑物 
+--x y 
 function World:setBuild(x, y, size, btype, obj)
 	local fsize = (size-1)/2
-	local cp = {x+fsize, y+fsize}
+	local cp = {x+fsize, y+fsize, obj} --建筑物中点 和 建筑物
 	self.typeNum[btype] = (self.typeNum[btype] or 0) + 1
 	self.allBuilds[self:getKey(x, y)] = cp
     --for k, v in pairs(self.allBuilds) do
     --    print("allBuilding "..self:getXY(k))
     --end
+    --1 2 3 4 / 4 =  math.floor((x-1)/4)+1
+    --设定大网格的最近距离的建筑物
+    --居中位置
+    --大网格对应的最近建筑
+    --每个建筑 作为最近建筑 对应的若干个大网格 
+    local cx = x+size/2
+    local cy = y+size/2
+    local totalX = math.ceil(self.cellNum/self.bigCoff)
+    local totalY = math.ceil(self.cellNum/self.bigCoff)
+    for i=1, totalX, 1 do
+        for j=1, totalY, 1 do
+            local key = self:getKey(i, j)
+            local data = self.bigGrid[key]
+            local bx, by = self:getBigCenter(i, j) 
+            local dx = bx-cx
+            local dy = by-cy
+            if data['nearDist'] == nil then
+                data['nearDist'] = dx*dx+dy*dy
+                data['nearObj'] = obj
+                data['nearX'] = cx
+                data['nearY'] = cy
+                if self.buildToBig[obj] == nil then
+                    self.buildToBig[obj] = {}
+                end
+                table.insert(self.buildToBig[obj], {i, j})
+            else
+                local newDist = dx*dx+dy*dy
+                if newDist < data['nearDist'] then
+                    data['nearDist'] = newDist
+                    data['nearObj'] = obj
+                    data['nearX'] = cx
+                    data['nearY'] = cy
+
+                    if self.buildToBig[obj] == nil then
+                        self.buildToBig[obj] = {}
+                    end
+                    table.insert(self.buildToBig[obj], {i, j})
+                end
+            end
+        end
+    end
+    --[[
+    for i=x-5, x+size+4 do
+        if i > 0 and i < self.cellNum then
+            for j=y-5, y+size+5 do
+                if j > 0 and j < self.cellNum then
+                end
+            end
+        end
+    end
+    ]]--
 
 	for i=x-6, x+size+5 do
 		if i>0 and i<=self.cellNum then
@@ -264,11 +377,47 @@ function World:setBuild(x, y, size, btype, obj)
     --self:showGrid()
 end
 
+--当大网格最近的建筑物被摧毁后 寻找新的最近的建筑物
+--压力转移到 建筑物销毁 和 游戏初始化阶段
+function World:findNearBuild(x, y)
+    local bx, by = self:getBigCenter(x, y) 
+    local data = self.bigGrid[self:getKey(x, y)]
+
+    local minDist = 9999999;
+    --遍历所有建筑物 寻找最近的建筑物
+    --建筑物太多怎么办？
+    for k, v in pairs(self.allBuilds) do
+        local dx = bx-v[1]
+        local dy = by-v[2]
+        local obj = v[3]
+        local newDist = dx*dx+dy*dy
+        if newDist < minDist then
+            data['nearDist'] = newDist
+            data['nearObj'] = obj
+            data['nearX'] = cx
+            data['nearY'] = cy
+            minDist = newDist
+        end
+    end
+end
+
 --清理建筑物的网格
 function World:clearBuild(x, y, size, btype, obj)
 	local fsize = (size-1)/2
 	local cp = {x+fsize, y+fsize}
 	self.allBuilds[self:getKey(x, y)] = nil
+
+    --清理当前建筑的最近的大网格
+    --为大网格重新寻找最近的建筑
+    if self.buildToBig[obj] ~= nil then
+        for k, v in ipairs(self.buildToBig) do
+            self:findNearBuild(v[1], v[2])
+        end
+        self.buildToBig[obj] = nil
+    end
+    
+
+
 	self.typeNum[btype] = self.typeNum[btype] - 1
 	for i=x-6, x+size+5 do
 		if i>0 and i<=self.cellNum then
@@ -311,6 +460,13 @@ function World:calcG(x, y)
     --当前可以绕过5个城墙
     if data['state'] == 'Wall' then
         dist = 50
+        --[[
+        if self.searchType == "attack" then
+            dist = 50
+        else
+
+        end
+        ]]--
     elseif data['state'] == 'Building' then
         dist = 500
     elseif difX > 0 and difY > 0 then
@@ -325,16 +481,27 @@ function World:calcG(x, y)
 
     data['gScore'] = self.cells[parent]['gScore']+dist
 end
+
+--士兵攻击的时候 首先寻找攻击目标
 function World:calcH(x, y, bx, by)
     local data = self.cells[self:getKey(x, y)]
-	--if self.searchType=="attack" then
-	--	data['hScore'] = 0
-	--else
+	if self.searchType=="attack" then
+        local bigCx, bigCy = self:smallToBig(x, y)
+        local bigData = self.bigGrid[self:getKey(bigCx, bigCy)]
+        if bigData['nearObj'] ~= nil then
+            local nearX, nearY = bigData['nearX'], bigData['nearY']
+            local dx, dy = math.abs(nearX-x), math.abs(nearY-y)
+            data['hScore'] = (dx+dy)*10
+        else
+		    data['hScore'] = 99999 --没有最近的建筑则是无穷远
+        end
+	else
 		local dx, dy = math.abs(self.endPoint[1]-x), math.abs(self.endPoint[2]-y)
 		local score = (dx+dy)*10
 		data['hScore'] = score
-	--end
+	end
 end
+
 function World:calcF(x, y)
     local data = self.cells[self:getKey(x, y)]
     data['fScore'] = data['gScore']+data['hScore']
@@ -434,6 +601,7 @@ end
 
 
 function World:search()
+    self.searchType = "business"
     self.searchNum = self.searchNum + 1
     if self.searchNum >= self.maxSearchNum then
         self.searchYet = true
@@ -505,7 +673,11 @@ function World:search()
     while parent ~= nil do
         local x, y = self:getXY(parent)
         table.insert(path, {x, y})
+        --路径到开始位置则结束
         if x == self.startPoint[1] and y == self.startPoint[2] then
+            break
+        end
+        --[[
         	if tempStart[1] or tempStart[2] then
         		table.insert(self.path, {tempStart[1] or self.startPoint[1], tempStart[2] or self.startPoint[2]})
         	end
@@ -514,6 +686,7 @@ function World:search()
             self.cells[parent]['isPath'] = true
             table.insert(self.path, {x, y})
         end
+        ]]--
         parent = self.cells[parent]["parent"]
     end
     
@@ -523,6 +696,7 @@ function World:search()
         --print(path[i][1], path[i][2])
     end
     
+    self.searchType = nil
     return temp
 end
 
@@ -542,6 +716,8 @@ function World:addPathCount(x, y)
 end
 --士兵当前的位置坐标 solX solY
 function World:searchAttack(range, fx, fy, solX, solY)
+    self.searchType = "attack"
+    
     self.searchNum = self.searchNum + 1
     if self.searchNum >= self.maxSearchNum then
         self.searchYet = true
@@ -567,8 +743,9 @@ function World:searchAttack(range, fx, fy, solX, solY)
 	if tempStart[2] then
 		self.startPoint[2], tempStart[2] = tempStart[2], self.startPoint[2]
 	end
-    self.searchType = "attack"
-    
+
+    --寻找所有的建筑物中最近的建筑物 作为endPoint
+    --[[
     local bx, by = self.startPoint[1]+fx, self.startPoint[2]+fy
     local minDis = nil
     for _, cp in pairs(self.allBuilds) do
@@ -579,6 +756,8 @@ function World:searchAttack(range, fx, fy, solX, solY)
     		self.endPoint = cp
     	end
     end
+    ]]--
+
 
     self.cells[self:getKey(self.startPoint[1], self.startPoint[2])]['gScore'] = 0
     self:calcH(self.startPoint[1], self.startPoint[2])
@@ -715,8 +894,7 @@ function World:searchAttack(range, fx, fy, solX, solY)
             target = wallObj 
 
             --return round(x/23), round(y/17.25)
-        --FIXME:
-            lastPoint = {0, 0} 
+            lastPoint = {solAffX, solAffY} 
         --起点在圆外  判断某个网格是否边界网格 
         --部分顶点在 射程范围外
         --部分顶点在射程范围内
@@ -746,8 +924,8 @@ function World:searchAttack(range, fx, fy, solX, solY)
             local x, y = affineToNormal(temp[stopGrid][1], temp[stopGrid][2])
             x, y = normalToCartesian(x, y)
             --网格内随机一定位置
-            local rx = math.random()*23-11.5
-            local ry = math.random()*17.25-17.25/2
+            --local rx = math.random()*23-11.5
+            --local ry = math.random()*17.25-17.25/2
             
             lastPoint = {temp[stopGrid][1], temp[stopGrid][2]}
         end

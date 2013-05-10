@@ -55,8 +55,8 @@ local function main()
         CCTextureCache:sharedTextureCache():removeTextureForKey("images/logo.png")
     end
     
-    CCUserDefault:sharedUserDefault():setStringForKey("username", "TEST6")
-    CCUserDefault:sharedUserDefault():setStringForKey("nickname", "TEST6")
+    CCUserDefault:sharedUserDefault():setStringForKey("username", "TEST2")
+    CCUserDefault:sharedUserDefault():setStringForKey("nickname", "TEST2")
     
     --runLogoScene()
     UserData.noPerson = false
