@@ -20,7 +20,7 @@ function PreBattleScene:ctor()
 	screen.autoSuitable(batch, {screenAnchor=General.anchorCenter, scaleType=screen.SCALE_NORMAL})
 	self.view:addChild(batch)
 	
-	temp = UI.createMenuButton(CCSizeMake(111, 109), "images/buttonChildMenu.png", self.returnHome, self, "images/menuItemAchieve.png", StringManager.getString("buttonReturnHome"), 20)
+	temp = UI.createMenuButton(CCSizeMake(111, 109), "images/buttonChildMenu.png", self.returnHome, self, "images/menuItemAchieve.png", StringManager.getString("buttonReturnHome"), 18)
 	screen.autoSuitable(temp, {x=72, y=70, screenAnchor=General.anchorLeftBottom, nodeAnchor=General.anchorCenter, scaleType=screen.SCALE_NORMAL})
 	self.view:addChild(temp)
 	
@@ -42,11 +42,12 @@ function PreBattleScene:ctor()
 	array:addObject(CCEaseSineIn:create(CCMoveBy:create(1, CCPointMake(0, 20))))
 	temp:runAction(CCRepeatForever:create(CCSequence:create(array)))
 	
-	temp = UI.createLabel(StringManager.getString("labelFindEnemy"), "fonts/font3.fnt", 33, {colorR = 255, colorG = 255, colorB = 181})
+	temp = UI.createLabel(StringManager.getString("labelFindEnemy"), "fonts/font3.fnt", 25, {colorR = 255, colorG = 255, colorB = 181})
 	screen.autoSuitable(temp, {screenAnchor=General.anchorCenter, x=0, y=0, scaleType=screen.SCALE_NORMAL})
 	self.view:addChild(temp)
 	
-	network.httpRequest("findEnemy", self.findOver, {params={baseScore=UserData.userScore}}, self)
+	network.httpRequest("findEnemy", self.findOver, {params={baseScore=UserData.userScore, uid=UserData.userId, eid=UserData.enemyId}}, self)
+	UserData.enemyId = nil
 end
 
 function PreBattleScene:returnHome()
@@ -57,6 +58,7 @@ end
 function PreBattleScene:findOver(suc, result)
 	if suc and not self.returnOver then
 		local data = json.decode(result)
+		UserData.enemyId = data.userId
 		local scene = BattleScene.new()
 		scene:initView()
 		scene:initGround()

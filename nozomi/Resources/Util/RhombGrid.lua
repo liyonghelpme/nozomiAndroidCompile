@@ -55,9 +55,10 @@ function RhombGrid:checkGridEmpty(key, gx, gy, gsize, fx, fy)
 	return true
 end
 
-function RhombGrid:setGridUse(key, gx, gy, gsize)
-	for i=1, gsize do
-		for j=1, gsize do
+function RhombGrid:setGridUse(key, gx, gy, gsizex, gsizey)
+    gsizey = gsizey or gsizex
+	for i=1, gsizex do
+		for j=1, gsizey do
 			local x, y = gx+i-1, gy+j-1
 			local grid = self:getGrid(key, x, y)
 			if grid then
@@ -69,9 +70,10 @@ function RhombGrid:setGridUse(key, gx, gy, gsize)
 	end
 end
 
-function RhombGrid:clearGridUse(key, gx, gy, gsize)
-	for i=1, gsize do
-		for j=1, gsize do
+function RhombGrid:clearGridUse(key, gx, gy, gsizex, gsizey)
+    gsizey = gsizey or gsizex
+	for i=1, gsizex do
+		for j=1, gsizey do
 			local x, y = gx+i-1, gy+j-1
 			local grid = self:getGrid(key, x, y)
 			grid.value = grid.value - 1

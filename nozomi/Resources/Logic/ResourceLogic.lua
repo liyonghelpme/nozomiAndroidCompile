@@ -41,6 +41,9 @@ do
 	function ResourceLogic.changeResource(resourceType, value)
 		local item = resourceItems[resourceType]
 		if not item then
+		    if resourceType=="crystal" then
+		        return CrystalLogic.changeCrystal(value)
+		    end
 			return UserData.changeValue(resourceType, value)
 		end
 		local p = {}
@@ -65,10 +68,16 @@ do
 		for i=1, tnum do
 			if p[i].max > value then
 				p[i].storage.resource = p[i].storage.resource + value*k
+				if p[i].storage.setResourceState then
+				    p[i].storage:updateOperationLogic(0)
+				end
 				break
 			else
 				value = value - p[i].max
 				p[i].storage.resource = p[i].storage.resource + p[i].max*k
+				if p[i].storage.setResourceState then
+				    p[i].storage:updateOperationLogic(0)
+				end
 			end
 		end
 		return retValue

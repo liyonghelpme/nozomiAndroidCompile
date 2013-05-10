@@ -28,6 +28,7 @@ require "Mould.Build.Nozomi"
 require "Mould.Build.Wall"
 require "Mould.Build.Obstacle"
 require "Mould.Build.Trap"
+require "Mould.Build.Dector"
 
 do	
 	local num_cache = {}
@@ -83,8 +84,9 @@ do
 				[3000]={Cannon}, [3001]={ArcherTower}, [3002]={Mortar}, [3003]={WizardTower}, [3004]={AirDefense}, [3005]={Hidden}, [3007]={Xbow}, 
 				[3006]={Wall},
 				[4000]={Obstacle}, [4001]={Obstacle}, [4002]={Obstacle}, [4003]={Obstacle}, [4004]={Obstacle}, [4005]={Obstacle}, [4006]={Obstacle}, [4007]={Obstacle}, [4008]={Obstacle}, [4009]={Obstacle}, [4010]={Obstacle}, [4011]={Obstacle}, [4012]={Obstacle}, [4013]={Obstacle}, [4014]={Obstacle}, [4015]={Obstacle}, [4016]={Obstacle}, [4017]={Obstacle}, [4018]={Obstacle}, 
-				[0]={Town}, [1]={Nozomi}, [2]={Clan},
-				[5000]={Trap}, [5001]={Trap}, [5002]={Trap}
+				[0]={Town, "person"}, [1]={Nozomi}, [2]={Clan},
+				[5000]={Trap}, [5001]={Trap}, [5002]={Trap},
+				[6000]={Dector}, [6001]={Dector, true}, [6002]={Dector, true}, [6003]={Dector, true}
 				}
 				
 	local function createBuild(bid, scene, setting)
@@ -95,7 +97,7 @@ do
 		else
 			build = BuildMould.new(bid, setting)
 		end
-		
+		build.id = setting.id
 		if scene then
 			build:addToScene(scene, setting)
 		end

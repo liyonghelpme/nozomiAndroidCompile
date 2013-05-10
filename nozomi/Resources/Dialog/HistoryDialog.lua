@@ -8,7 +8,11 @@ local function onVideo()
 	end
 	BattleLogic.init()
 	UI.testChangeScene(true)
-	delayCallback(1, display.pushScene, ReplayScene)
+	delayCallback(getParam("actionTimeChangeScene", 600)/1000, display.pushScene, ReplayScene)
+end
+
+local function onReverge()
+
 end
 
 local function updateHistoryCell(bg, scrollView, info)
@@ -73,6 +77,7 @@ local function updateHistoryCell(bg, scrollView, info)
 	temp = UI.createSpriteWithFile("images/chatRoomItemVisit.png",CCSizeMake(30, 31))
 	screen.autoSuitable(temp, {nodeAnchor=General.anchorLeft, x=10+w, y=146})
 	bg:addChild(temp)
+	UI.registerVisitIcon(bg, scrollView, HistoryDialog.dialogBack, info.uid, temp)
 	
 	-- resources
 	temp = UI.createSpriteWithFile("images/food.png",CCSizeMake(19, 26))
@@ -81,43 +86,48 @@ local function updateHistoryCell(bg, scrollView, info)
 	temp = UI.createSpriteWithFile("images/oil.png",CCSizeMake(20, 22))
 	screen.autoSuitable(temp, {x=156, y=10})
 	bg:addChild(temp)
-	temp = UI.createSpriteWithFile("images/special.png",CCSizeMake(30, 29))
-	screen.autoSuitable(temp, {x=291, y=4})
-	bg:addChild(temp)
-	temp = UI.createLabel(tostring(info.food), "fonts/font3.fnt", 18, {colorR = 255, colorG = 255, colorB = 255, lineOffset=12})
+	--temp = UI.createSpriteWithFile("images/special.png",CCSizeMake(30, 29))
+	--screen.autoSuitable(temp, {x=291, y=4})
+	--bg:addChild(temp)
+	temp = UI.createLabel(tostring(info.food), "fonts/font3.fnt", 18, {colorR = 255, colorG = 255, colorB = 255, lineOffset=-12})
 	screen.autoSuitable(temp, {x=35, y=22, nodeAnchor=General.anchorLeft})
 	bg:addChild(temp)
-	temp = UI.createLabel(tostring(info.oil), "fonts/font3.fnt", 18, {colorR = 255, colorG = 255, colorB = 255, lineOffset=12})
+	temp = UI.createLabel(tostring(info.oil), "fonts/font3.fnt", 18, {colorR = 255, colorG = 255, colorB = 255, lineOffset=-12})
 	screen.autoSuitable(temp, {x=180, y=22, nodeAnchor=General.anchorLeft})
 	bg:addChild(temp)
-	temp = UI.createLabel(tostring(info.special), "fonts/font3.fnt", 18, {colorR = 255, colorG = 255, colorB = 255, lineOffset=12})
-	screen.autoSuitable(temp, {x=325, y=22, nodeAnchor=General.anchorLeft})
-	bg:addChild(temp)
+	--temp = UI.createLabel(tostring(info.special), "fonts/font3.fnt", 18, {colorR = 255, colorG = 255, colorB = 255, lineOffset=-12})
+	--screen.autoSuitable(temp, {x=325, y=22, nodeAnchor=General.anchorLeft})
+	--bg:addChild(temp)
 	
 	-- score
-	temp = UI.createLabel(info.score, "fonts/font3.fnt", 25, {colorR = 255, colorG = 255, colorB = 255, lineOffset=12})
+	temp = UI.createLabel(info.score, "fonts/font3.fnt", 25, {colorR = 255, colorG = 255, colorB = 255, lineOffset=-12})
 	screen.autoSuitable(temp, {x=623, y=38, nodeAnchor=General.anchorRight})
 	bg:addChild(temp)
 	temp = UI.createSpriteWithFile("images/score.png",CCSizeMake(25, 29))
 	screen.autoSuitable(temp, {x=628, y=23})
 	bg:addChild(temp)
 	
-	temp = UI.createLabel(info.uscore, "fonts/font3.fnt", 17, {colorR = 255, colorG = 255, colorB = 255, lineOffset=12})
+	temp = UI.createLabel(info.uscore, "fonts/font3.fnt", 17, {colorR = 255, colorG = 255, colorB = 255, lineOffset=-12})
 	screen.autoSuitable(temp, {x=533, y=147, nodeAnchor=General.anchorRight})
 	bg:addChild(temp)
 	temp = UI.createSpriteWithFile("images/score.png",CCSizeMake(20, 23))
 	screen.autoSuitable(temp, {x=542, y=134})
 	bg:addChild(temp)
 	
-	temp = UI.createButton(CCSizeMake(150, 50), onVideo, {callbackParam=info, image="images/buttonGreenB.png", text=StringManager.getString("buttonVideo"), fontSize=15, fontName="fonts/font3.fnt"})
+	--temp = UI.createButton(CCSizeMake(150, 50), onVideo, {callbackParam=info, image="images/buttonGreenB.png", text=StringManager.getString("buttonVideo"), fontSize=15, fontName="fonts/font3.fnt"})
+	--screen.autoSuitable(temp, {x=740, y=96, nodeAnchor=General.anchorCenter})
+	--bg:addChild(temp)
+	
+	temp = scrollView:createButton(CCSizeMake(150, 50), onVideo, {callbackParam=info, image="images/buttonGreenB.png", text=StringManager.getString("buttonVideo"), fontSize=15, fontName="fonts/font3.fnt"})
 	screen.autoSuitable(temp, {x=740, y=96, nodeAnchor=General.anchorCenter})
 	bg:addChild(temp)
+	
 	if info.revenged then
 		temp = UI.createLabel(StringManager.getString("labelRevergeOver"), "fonts/font1.fnt", 11, {colorR = 115, colorG = 113, colorB = 115})
 		screen.autoSuitable(temp, {x=685, y=38, nodeAnchor=General.anchorLeft})
 		bg:addChild(temp)
 	else
-		temp = UI.createButton(CCSizeMake(150, 50), onReverge, {callbackParam=info, image="images/buttonEnd.png", text=StringManager.getString("buttonReverge"), fontSize=15, fontName="fonts/font3.fnt"})
+		temp = scrollView:createButton(CCSizeMake(150, 50), onReverge, {callbackParam=info, image="images/buttonEnd.png", text=StringManager.getString("buttonReverge"), fontSize=15, fontName="fonts/font3.fnt"})
 		screen.autoSuitable(temp, {x=740, y=40, nodeAnchor=General.anchorCenter})
 		bg:addChild(temp)
 	end
@@ -166,6 +176,7 @@ function HistoryDialog.show()
 	screen.autoSuitable(bg, {screenAnchor=General.anchorCenter, scaleType = screen.SCALE_CUT_EDGE})
 	
 	UI.setShowAnimate(bg)
+	HistoryDialog.dialogBack = bg
 	-- 30 25 175
 	
 	local scrollView = UI.createScrollViewAuto(CCSizeMake(891, 525), false, {offx=30, offy=1, disy=4, size=CCSizeMake(827, 171), infos=UserData.historys, cellUpdate=updateHistoryCell})
@@ -186,4 +197,6 @@ function HistoryDialog.show()
 	bg:addChild(temp)
 	
 	display.showDialog({view=bg}, true)
+	
+	EventManager.sendMessage("EVENT_NOTICE_BUTTON", {name="mail"})
 end

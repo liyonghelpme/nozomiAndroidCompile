@@ -1,68 +1,119 @@
-require "Scene.CastleScene"
-require "Scene.StoryScene"
+require "data.TipsData"
+require "Dialog.WaitAttackDialog"
 
-LoadingScene = nil
-do
-	local function createLoadingScene()
-	    local layer = CCLayer:create()
+LoadingScene = class()
+
+function LoadingScene:ctor()
+	local bg = CCNode:create()
+	self.view = bg
 	
-		local temp = nil
-		local bg = UI.createSpriteWithFile("images/loadMain.png", CCSizeMake(1136,640))
-		screen.autoSuitable(bg, {width=1136, height=640, screenAnchor=General.anchorCenter, scaleType=screen.SCALE_NORMAL})
-		layer:addChild(bg)
-		temp = UI.createSpriteWithFile("images/wangguoLogo.png", CCSizeMake(220,140))
-		screen.autoSuitable(temp, {x=20, y=-15, screenAnchor=General.anchorLeftTop, scaleType=screen.SCALE_NORMAL})
-		layer:addChild(temp)
-		temp = UI.createSpriteWithFile("images/loadingWord.png", CCSizeMake(155,35))
-		screen.autoSuitable(temp, {x=-66, y=-46, screenAnchor=General.anchorRightTop, scaleType=screen.SCALE_NORMAL})
-		layer:addChild(temp)
-	
-		local circle = UI.createSpriteWithFile("images/loadingCircle.png", CCSizeMake(50,57))
-		screen.autoSuitable(circle, {x=-37, y=-58, screenAnchor=General.anchorRightTop, scaleType=screen.SCALE_NORMAL, nodeAnchor=General.anchorCenter})
-		circle:runAction(CCRepeatForever:create(CCRotateBy:create(getParam("loadingRotateTime",2000)/1000, 360)))
-		layer:addChild(circle)
-	
-		local thunder = UI.createAnimateSprite(getParam("loadingThunderTime", 1100)/1000, "animate/lighting", 6)
-		screen.autoSuitable(thunder, {y=35, screenAnchor=General.anchorBottom, scaleType=screen.SCALE_NORMAL})
-		layer:addChild(thunder)
-		
-		local percentLabel = CCLabelBMFont:create("0%", "fonts/red.fnt", 32)
-		percentLabel:setPosition(General.winSize.width/2, 137)
-		screen.autoSuitable(percentLabel, {y=121, screenAnchor=General.anchorBottom, scaleType=screen.SCALE_NORMAL})
-		layer:addChild(percentLabel);
-		local function setPercentLabel(percent)
-			percentLabel:setString(percent)
-		end
-		
-		local cp = 0
-		local state = nil
-		local function update(diff)
-			if cp==100 then
-				if state == 2 then
-					display.runScene(CastleScene)
-				elseif state == 1 then
-					display.runScene(StoryScene)
-				end
-				return
-			end
-			cp = cp + math.random(10)
-			if cp > 100 then cp = 100 end
-			setPercentLabel(cp .. "%")
-		end
-		local function test(isSuc, result)
-			if isSuc then
-				local dict = json.decode(result)
-				if dict.ok then
-					state = 1
-				else
-					state = 2
-				end
-			end
-		end
-		network.httpRequest("http://uhz000738.chinaw3.com:5000/test", test)
-		simpleRegisterEvent(layer, {update={callback = update, inteval=0.2}})
-	    return {view = layer, setPercent = setPercentLabel}
-	end
-	
-	LoadingScene = {create = createLoadingScene}
+	local temp = nil
+    temp = UI.createSpriteWithFile("images/loadingBack.png")
+    screen.autoSuitable(temp, {screenAnchor=General.anchorCenter, scaleType=screen.SCALE_NORMAL})
+    bg:addChild(temp)
+    
+    CCTextureCache:sharedTextureCache():removeTextureForKey("images/loadingBack.png")
+    
+    temp = UI.createSpriteWithFile("images/loadingTitle.png")
+    screen.autoSuitable(temp, {screenAnchor=General.anchorTop, scaleType=screen.SCALE_NORMAL, x=-17})
+    bg:addChild(temp)
+    
+    CCTextureCache:sharedTextureCache():removeTextureForKey("images/loadingTitle.png")
+    
+    temp = UI.createSpriteWithFile("images/tipsBg.png",CCSizeMake(518, 67))
+    screen.autoSuitable(temp, {screenAnchor=General.anchorBottom, scaleType=screen.SCALE_NORMAL, x=0, y=12})
+    bg:addChild(temp)
+    local temp1 = UI.createLabel(TipsData.getTip(), "fonts/font3.fnt", 14, {colorR = 255, colorG = 255, colorB = 255, size=CCSizeMake(506, 50)})
+    screen.autoSuitable(temp1, {x=259, y=34, nodeAnchor=General.anchorCenter})
+    temp:addChild(temp1)
+    CCTextureCache:sharedTextureCache():removeTextureForKey("images/tipsBg.png")
+    
+    temp = UI.createSpriteWithFile("images/loadingProcessBack.png",CCSizeMake(283, 25))
+    screen.autoSuitable(temp, {screenAnchor=General.anchorBottom, scaleType=screen.SCALE_NORMAL, x=0, y=66})
+    bg:addChild(temp)
+    local filler = UI.createSpriteWithFile("images/loadingProcessFiller.png",CCSizeMake(279, 20))
+    screen.autoSuitable(filler, {x=2, y=3})
+    temp:addChild(filler)
+    local fillerSize = filler:getContentSize()
+    
+    CCTextureCache:sharedTextureCache():removeTextureForKey("images/loadingProcessBack.png")
+    CCTextureCache:sharedTextureCache():removeTextureForKey("images/loadingProcessFiller.png")
+    
+    local infoLabel = UI.createLabel(StringManager.getString("labelLoading"), "fonts/font3.fnt", 16, {colorR = 255, colorG = 255, colorB = 255})
+    screen.autoSuitable(infoLabel, {x=132, y=29, nodeAnchor=General.anchorTop})
+    temp:addChild(infoLabel)
+    
+    local function setPercent(percent)
+    	filler:setTextureRect(CCRectMake(0, 0, fillerSize.width*percent/100, fillerSize.height))
+    end
+    setPercent(0)
+    local cp = 0
+    local loadData = nil
+    local function update(diff)
+    	if cp==100 then
+            if loadData then
+    			local scene = OperationScene.new(false)
+    			scene:initView()
+    			scene:initGround()
+    			scene:initData(loadData)
+    			scene:initMenu()
+    			display.runScene(scene)
+    			
+    			-- TEST
+    			CCSpriteBatchNode:create("images/fog.png")
+            end
+            return
+    	end
+    	cp = cp + math.random(10)
+    	if cp > 100 then cp = 100 end
+    	setPercent(cp)
+    end
+    local requestData = nil
+    local function requestSelfData(isSuc, result)
+    	if isSuc then
+            local data = json.decode(result)
+            if data.attackTime then
+                if not display.isDialogShow() then
+                    display.showDialog(WaitAttackDialog.new(data.attackTime))
+                end
+                delayCallback(squeeze(data.attackTime, 5, 30), requestData)
+            else
+                loadData = data
+            end
+        else
+            print("test")
+    	end
+    end
+    
+    requestData = function()
+        network.httpRequest("getData", requestSelfData, {params={uid=UserData.userId, login=1}})
+    end
+    local function requestSelfId(isSuc, result)
+    	if isSuc then
+            local r = json.decode(result)
+            if r.code==0 then
+                UserData.userId = r.uid
+                if r.params then
+	                params = r.params
+	                for k, v in pairs(params) do
+	                	PARAM[k] = v
+	                end
+	            end
+	            requestData()
+            end
+        else
+            print("test")
+    	end
+    end
+    local function readyToLoad()
+        local username = CCUserDefault:sharedUserDefault():getStringForKey("username")
+        if username and username~="" then
+            print("username", username)
+            network.httpRequest("login", requestSelfId, {isPost=true, params={username=username, nickname=CCUserDefault:sharedUserDefault():getStringForKey("nickname")}})
+        else
+            delayCallback(1, readyToLoad)
+        end
+    end
+    readyToLoad()
+    simpleRegisterEvent(bg, {update={callback = update, inteval=0.2}})
 end

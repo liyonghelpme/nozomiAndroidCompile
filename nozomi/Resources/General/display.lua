@@ -22,25 +22,33 @@ do
 	local notices = {}
 	local nid = 0
 	
-	local function closeDialog()
+	local function closeDialog(isAlert)
 		if curDialog then
-			EventManager.sendMessage("EVENT_DIALOG_CLOSE", curDialog)
-			local size = curDialog.view:getContentSize()
-			curDialog.deleted = true
-			if size.width>0 and size.width<General.winSize.width and size.height>0 and size.height<General.winSize.height then
-				curDialog.view:runAction(CCEaseBackIn:create(CCScaleTo:create(0.25, 0, 0)))
-				delayRemove(0.25, curDialog.dialog)
-			else
-				curDialog.dialog:removeFromParentAndCleanup(true)
-			end
-			curDialog = nil
+		    local pDialog = curDialog.parentDialog
+		    if pDialog and not pDialog.deleted then
+		        if isAlert then
+    		        curDialog.view:runAction(CCEaseBackIn:create(CCScaleTo:create(0.25, 0, 0)))
+        			delayRemove(0.25, curDialog.dialog)
+        			curDialog = pDialog
+        			return true
+        		else
+        		    closeDialog(true)
+        		end
+        	end
+    		EventManager.sendMessage("EVENT_DIALOG_CLOSE", curDialog)
+    		local size = curDialog.view:getContentSize()
+    		curDialog.deleted = true
+    		if size.width>0 and size.width<General.winSize.width and size.height>0 and size.height<General.winSize.height then
+    			curDialog.view:runAction(CCEaseBackIn:create(CCScaleTo:create(0.25, 0, 0)))
+    			delayRemove(0.25, curDialog.dialog)
+    		else
+    			curDialog.dialog:removeFromParentAndCleanup(true)
+    		end
+    		curDialog = nil
 		end
 	end
 	
 	local function showDialog(dialog, autoPop)
-		if curDialog then
-			closeDialog()
-		end
 		if type(dialog) == "table" and (not dialog.view) then
 			if dialog.create then
 				dialog = dialog.create()
@@ -50,6 +58,17 @@ do
 		end
 		if type(dialog) == "userdata" then
 			dialog = {view = dialog}
+		end
+		if curDialog then
+		    -- test
+		    if dialog.isAlert then
+		        if curDialog.isAlert then
+		            closeDialog(true)
+		        end
+		        dialog.parentDialog = curDialog
+		    else
+    			closeDialog()
+    		end
 		end
 		local function darkCallback()
 			if autoPop then
@@ -67,8 +86,12 @@ do
 		node:addChild(dialog.view)
 		dialog.dialog = node
 		curDialog = dialog
-		EventManager.sendMessage("EVENT_DIALOG_OPEN", curDialog)
-		director:getRunningScene():addChild(node, DIALOG_ZORDER)
+		if not curDialog.parentDialog then
+		    EventManager.sendMessage("EVENT_DIALOG_OPEN", curDialog)
+		end
+		local scene = dialog.scene
+		if not scene then scene = director:getRunningScene() end
+		scene:addChild(node, DIALOG_ZORDER)
 	end
 	
 	local function popNotice(id)
@@ -153,19 +176,21 @@ do
 		end
 	end
 	
-	local function popScene()
+	local function popScene(noAnimate)
 		clearScene()
 		director:popScene()
 		sceneStack[#sceneStack] = nil
 		
-		Action.test()
+		if not noAnimate then
+		    Action.test()
+		end
 	end
 	
 	display = {SCENE_PRI = SCENE_PRI, MENU_PRI=MENU_PRI, MENU_BUTTON_PRI=MENU_BUTTON_PRI, DARK_PRI=DARK_PRI, DIALOG_PRI=DIALOG_PRI, DIALOG_BUTTON_PRI=DIALOG_BUTTON_PRI, NOTICE_PRI=NOTICE_PRI, NOTICE_BUTTON_PRI = NOTICE_BUTTON_PRI;
 	closeDialog = closeDialog, showDialog = showDialog, pushNotice = pushNotice, runScene=runScene, pushScene=pushScene, popScene = popScene}
 	
-	function display.getCurrentScene()
-		return sceneStack[#sceneStack]
+	function display.getCurrentScene(index)
+		return sceneStack[index or #sceneStack]
 	end
 	
 	function display.isDialogShow()

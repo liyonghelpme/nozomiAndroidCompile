@@ -1,25 +1,18 @@
-BattleResultDialog = class()
+ZombieResultDialog = class()
 
-function BattleResultDialog:enterReplayScene()
-	local resourceTypes = {"oil", "food"}
-	for i=1, 2 do
-		local resourceType = resourceTypes[i]
-		BattleLogic.resources[resourceType] = {left=0, stolen=0, base=ResourceLogic.getResource(resourceType), max=ResourceLogic.getResourceMax(resourceType)}
-	end
-	BattleLogic.init()
-	UI.testChangeScene(true)
-	delayCallback(getParam("actionTimeChangeScene", 600)/1000, display.runScene, ReplayScene)
+function ZombieResultDialog:enterReplayScene()
+    -- doNothing
 end
 
-function BattleResultDialog:ctor(result)
+function ZombieResultDialog:ctor(result)
 	self.view = CCNode:create()
 	self.view:setContentSize(General.winSize)
 	screen.autoSuitable(self.view, {screenAnchor=General.anchorCenter})
 	local temp
 	local array
 	
-	temp = UI.createSpriteWithFile("images/dialogItemBattleResultBg.png",CCSizeMake(1104, 498))
-	screen.autoSuitable(temp, {screenAnchor=General.anchorLeftBottom, x=-13, y=-2, scaleType=screen.SCALE_WIDTH_FIRST})
+	temp = UI.createSpriteWithFile("images/dialogItemBattleResultBgB.png",CCSizeMake(1024, 478))
+	screen.autoSuitable(temp, {screenAnchor=General.anchorLeftBottom, x=0, y=0, scaleType=screen.SCALE_WIDTH_FIRST})
 	self.view:addChild(temp)
 	temp = UI.createButton(CCSizeMake(62, 42), self.enterReplayScene, {callbackParam=self, image="images/battleEndVideo.png"})
 	screen.autoSuitable(temp, {screenAnchor=General.anchorRightBottom, nodeAnchor=General.anchorCenter, x=-80, y=58, scaleType=screen.SCALE_NORMAL})
@@ -35,6 +28,7 @@ function BattleResultDialog:ctor(result)
 	self.view:addChild(bg)
 	
 	local s = bg:getScale()
+	
 	bg:setScale(0.5*s)
 	bg:runAction(CCEaseBackOut:create(CCScaleTo:create(0.1, s, s)))
 	
@@ -46,40 +40,40 @@ function BattleResultDialog:ctor(result)
 	temp = UI.createLabel(StringManager.getString("labelGot"), "fonts/font2.fnt", 13, {colorR = 255, colorG = 255, colorB = 255})
 	screen.autoSuitable(temp, {x=512, y=439, nodeAnchor=General.anchorCenter})
 	bg:addChild(temp)
-	temp = UI.createLabel(StringManager.getString("labelLost"), "fonts/font2.fnt", 13, {colorR = 255, colorG = 255, colorB = 255})
+	temp = UI.createLabel(StringManager.getString("labelZombieLost"), "fonts/font2.fnt", 13, {colorR = 255, colorG = 255, colorB = 255})
 	screen.autoSuitable(temp, {x=512, y=260, nodeAnchor=General.anchorCenter})
 	bg:addChild(temp)
 	
-	local keys = {"food", "oil", "score"}
-	for i=1, 3 do
-		local key = keys[i]
-		
-		temp = UI.createLabel("0", "fonts/font3.fnt", 30, {colorR = 255, colorG = 255, colorB = 255})
-		screen.autoSuitable(temp, {x=524, y=458-53*i, nodeAnchor=General.anchorRight})
-		bg:addChild(temp)
-		temp:runAction(CCNumberTo:create(numberToTime, 0, result[key], "", ""))
-		temp = UI.createScaleSprite("images/" .. key .. ".png",CCSizeMake(60, 36))
-		screen.autoSuitable(temp, {nodeAnchor=General.anchorBottom, x=554, y=443-53*i})
-		bg:addChild(temp)
-		temp = UI.createSpriteWithFile("images/dialogItemBattleResultSeperator.png",CCSizeMake(665, 2))
-		screen.autoSuitable(temp, {nodeAnchor=General.anchorBottom, x=512, y=433-53*i})
-		bg:addChild(temp)
-		if i<3 then
-			ResourceLogic.changeResource(key, result[key])
-		else
-			UserData.userScore = UserData.userScore + result[key]
-			EventManager.sendMessage("EVENT_OTHER_OPERATION", {type="Set", key="score", value=UserData.userScore})
-		end
-	end
+	temp = UI.createLabel("-0", "fonts/font3.fnt", 30, {colorR = 250, colorG = 61, colorB = 4})
+    screen.autoSuitable(temp, {x=524, y=404, nodeAnchor=General.anchorRight})
+    bg:addChild(temp)
+	temp:runAction(CCNumberTo:create(numberToTime, 0, result.losePerson, "", ""))
+    temp = UI.createSpriteWithFile("images/person.png",CCSizeMake(47, 36))
+    screen.autoSuitable(temp, {x=529, y=385})
+    bg:addChild(temp)
+    for i=1, 3 do
+    	temp = UI.createSpriteWithFile("images/dialogItemBattleResultSeperator.png",CCSizeMake(665, 2))
+    	screen.autoSuitable(temp, {nodeAnchor=General.anchorBottom, x=512, y=433-53*i})
+    	bg:addChild(temp)
+    end
+	ResourceLogic.changeResource("person", result.losePerson)
+	temp = UI.createLabel("0", "fonts/font3.fnt", 30, {colorR = 255, colorG = 255, colorB = 255})
+	screen.autoSuitable(temp, {x=524, y=352, nodeAnchor=General.anchorRight})
+	bg:addChild(temp)
+	temp:runAction(CCNumberTo:create(numberToTime, 0, result.stars, "", ""))
+	temp = UI.createScaleSprite("images/crystal.png",CCSizeMake(60, 36))
+	screen.autoSuitable(temp, {nodeAnchor=General.anchorBottom, x=554, y=337})
+	bg:addChild(temp)
 	
 	local items = {}
-	local costTroops = result.costTroops
-	for i=1, 10 do
-	    if costTroops[i]>0 then
-	        table.insert(items, {id=i, num=costTroops[i]})
+	local zombieNum = 0
+	for i=1, 8 do
+	    local znum = result.killZombies[i]
+	    if znum>0 then
+	        zombieNum = zombieNum + znum
+	        table.insert(items, {id=i, num=znum})
 	    end
 	end
-	SoldierLogic.deploySoldier(costTroops)
 	for i=1, 12 do
 		local cell = CCNode:create()
 		cell:setContentSize(CCSizeMake(48, 63))
@@ -89,15 +83,17 @@ function BattleResultDialog:ctor(result)
 			temp = UI.createSpriteWithFile("images/dialogItemBattleResultItemB.png",CCSizeMake(48, 63))
 			screen.autoSuitable(temp, {x=0, y=0})
 			cell:addChild(temp)
-			SoldierHelper.addSoldierHead(cell, items[i].id, 0.42)
-			for j=1, UserData.researchLevel[items[i].id] do
-				temp = UI.createSpriteWithFile("images/soldierStar.png",CCSizeMake(10, 11))
-				screen.autoSuitable(temp, {x=9*j-7, y=3})
-				cell:addChild(temp)
-			end
-			temp = UI.createLabel("x" .. items[i].num, "fonts/font3.fnt", 15, {colorR = 255, colorG = 121, colorB = 123})
-			screen.autoSuitable(temp, {x=6, y=55, nodeAnchor=General.anchorLeft})
+			temp = UI.createScaleSprite("images/zombieHead" .. items[i].id .. ".png", CCSizeMake(50, 80))
+			screen.autoSuitable(temp, {nodeAnchor=General.anchorCenter, x=24, y=32})
 			cell:addChild(temp)
+			--for j=1, UserData.researchLevel[items[i].id] do
+			--	temp = UI.createSpriteWithFile("images/soldierStar.png",CCSizeMake(10, 11))
+			--	screen.autoSuitable(temp, {x=9*j-7, y=3})
+			--	cell:addChild(temp)
+			--end
+			--temp = UI.createLabel("x" .. items[i].num, "fonts/font3.fnt", 15, {colorR = 255, colorG = 121, colorB = 123})
+			--screen.autoSuitable(temp, {x=6, y=55, nodeAnchor=General.anchorLeft})
+			--cell:addChild(temp)
 		else
 			temp = UI.createSpriteWithFile("images/dialogItemBattleResultItemB.png",CCSizeMake(48, 63))
 			screen.autoSuitable(temp, {x=0, y=0})
@@ -171,53 +167,16 @@ function BattleResultDialog:ctor(result)
 	bg:addChild(temp, 2)
 	temp:runAction(CCNumberTo:create(numberToTime, 0, result.percent, "", "%"))
 
-	EventManager.sendMessage("EVENT_BATTLE_END", result)
-	
-	-- begin syn network
-	local update = {}
-	local deleted = result.costTraps
-	local scene = display.getCurrentScene()
-	for id, buildData in pairs(result.resourceBuilds) do
-	    local b = scene.builds[id]
-	    if b.buildData.bid~=TOWN_BID and b.getExtendInfo then
-	        local item = b:getBaseInfo()
-	        print(json.encode(item), json.encode(buildData))
-	        item.buildIndex = id
-	        item.extend.resource = item.extend.resource - math.floor(buildData.resources[b.resourceType]*(1-buildData.hitpoints/buildData.max))
-	        table.insert(update, item)
-	    end
+    if result.stars > 0 then
+	    EventManager.sendMessage("EVENT_OTHER_OPERATION", {key="defend", type="Add"})
+	    CrystalLogic.changeCrystal(result.stars)
 	end
-	local params = {}
-	if #update>0 then
-	    params.update = update
-	end
-	if #deleted>0 then
-	    params.delete = deleted
-	end
-	params.score = -result.score
-	params.shieldTime = timer.getServerTime(result.shieldTime)
-	params.uid = UserData.userId
-	params.eid = UserData.enemyId
-	-- shieldTime
-    network.httpRequest("synBattleData", self.synBattleDone, {isPost=true, params=params}, self)
-end
-
-function BattleResultDialog:endBattle()
-    if self.synOver then
-    	Action.test(true)
-    	delayCallback(getParam("actionTimeChangeScene", 600)/1000, display.popScene)
-    	self.synOver = false
-    else
-        self.endButtonDown = true
+	if zombieNum>0 then
+    	EventManager.sendMessage("EVENT_OTHER_OPERATION", {key="zombie", type="Add", value=zombieNum})
     end
 end
 
-function BattleResultDialog:synBattleDone()
-    if self.endButtonDown then
-    	Action.test(true)
-    	delayCallback(getParam("actionTimeChangeScene", 600)/1000, display.popScene)
-    	SoldierLogic.isInit = true
-    else
-        self.synOver = true
-    end
+function ZombieResultDialog:endBattle()
+	Action.test(true)
+	delayCallback(getParam("actionTimeChangeScene", 600)/1000, display.popScene)
 end

@@ -1,17 +1,18 @@
 Effect = {}
 
-function Effect.createGatherEffect(dir, time)
+function Effect.createGatherEffect(dir, time, color)
+    local total = 10
     local p = CCParticleSystemQuad:create()
-    p:setTotalParticles(40)
+    p:setTotalParticles(total)
     p:setPositionType(kCCPositionTypeGrouped)
-    p:setEmissionRate(40/0.3)
+    p:setEmissionRate(total/0.3)
     p:setDuration(time)
 
     p:setEmitterMode(kCCParticleModeRadius)
     p:setLife(0.3) --越小运动越快
     p:setLifeVar(0.1)
     p:setStartSize(20) --根据具体图片
-    p:setStartSizeVar(0)
+    p:setStartSizeVar(5)
     p:setEndSize(0)
     p:setEndSizeVar(0)
 
@@ -27,7 +28,7 @@ function Effect.createGatherEffect(dir, time)
    -- p:setPosition(pos) --炮口的位置
     --p:setSourcePosition(pos)
 
-    p:setStartColor(ccc4f(0, 0.05, 1, 1.0))
+    p:setStartColor(color)
     p:setStartColorVar(ccc4f(0, 0, 0, 0.0))
 
     p:setEndColor(ccc4f(0, 0.05, 1.0, 1.0))
@@ -75,7 +76,7 @@ function Effect.createFlyEffect(dir, time)
     return p
 end
 
-function Effect.createBombEffect(time)
+function Effect.createBombEffect(time, color)
     local p = CCParticleSystemQuad:create()
     p:setTotalParticles(200)
     p:setPositionType(kCCPositionTypeRelative)
@@ -84,10 +85,10 @@ function Effect.createBombEffect(time)
 
     p:setEmissionRate(200) --爆炸效果持续的时间
     p:setGravity(ccp(0, 0))
-    p:setSpeed(30) --爆炸效果的速度 跟建筑范围相关 速度越大爆炸范围越大
+    p:setSpeed(0) --爆炸效果的速度 跟建筑范围相关 速度越大爆炸范围越大
 
-    p:setRadialAccel(200) --爆炸最后的喷射速度
-    p:setTangentialAccel(-80)
+    p:setRadialAccel(-0) --爆炸最后的喷射速度
+    p:setTangentialAccel(-0)
 
     p:setAngle(90)
     p:setAngleVar(360)
@@ -102,7 +103,7 @@ function Effect.createBombEffect(time)
 
     p:setPosVar(ccp(10, 10))--爆炸初始范围
 
-    p:setStartColor(ccc4f(0, 0.05, 1, 1))
+    p:setStartColor(color)
     p:setStartColorVar(ccc4f(0, 0.45, 0, 0.31))
     p:setEndColor(ccc4f(0, 0.05, 1, 1))
     p:setBlendAdditive(true)

@@ -1,12 +1,26 @@
 StoreDialog = {}
 
 do
+
+    local function buyShield(info)
+        if CrystalLogic.changeCrystal(info.costValue) then
+            local t = timer.getTime()
+            if t < UserData.shieldTime then
+                t = UserData.shieldTime
+            end
+            UserData.shieldTime = t + info.time
+            --display.closeDialog()
+        end
+    end
+    
 	local function buyBuild(info)
 		if info.bid then
 			EventManager.sendMessage("EVENT_BUY_BUILD", info.bid)
 		else
-			display.closeDialog()
-			UserData.shieldTime = timer.getTime() + info.time
+		    display.showDialog(AlertDialog.new(StringManager.getString("alertTitleBuyShield"), StringManager.getFormatString("alertTextBuyShield", {time=info.name}), {crystal=info.costValue, callback=buyShield, param=info}))
+		    
+			--display.closeDialog()
+			--UserData.shieldTime = timer.getTime() + info.time
 		end
 	end
 	
@@ -25,12 +39,11 @@ do
 		cell:addChild(temp)
 		if info.bid then
 			if not GuideLogic.complete then
-				local setting = GuideLogic.pointerSetting
-				if setting and setting[2]=="shop" and setting[4][info.bid] then
+				if info.bid==GuideLogic.guideBid then
 					local pt = UI.createGuidePointer(-45)
 					pt:setPosition(70, 165)
 					pt:setScale(0.5)
-					tp1:addChild(pt)
+					cell:addChild(pt, 10)
 				end
 			end
 			
@@ -38,7 +51,18 @@ do
 			temp = b:getBuildView()
 			local sc = squeeze(2/b.buildData.gridSize, 0, 1)
 			temp:setScale(sc)
-			screen.autoSuitable(temp, {nodeAnchor=General.anchorBottom, x=143, y=65})
+			if b.buildData.gridSize==1 then
+    			screen.autoSuitable(temp, {nodeAnchor=General.anchorBottom, x=143, y=75+getParam("buildViewOffy" .. info.bid, 0)})
+			else
+			    if b.buildData.gridSize==2 then
+			        temp:setScale(sc*0.75)
+			    end
+			    local yoff = 65
+			    if b.buildData.bid>3000 and b.buildData.bid<3007 or b.isFlag then
+			        yoff = 40
+			    end
+    			screen.autoSuitable(temp, {nodeAnchor=General.anchorBottom, x=143, y=yoff})
+    		end
 			bg:addChild(temp)
 			if info.levelLimit==0 then
 				temp = UI.createLabel(StringManager.getFormatString("needLevel", {level=info.nextLevel, name=StringManager.getString("dataBuildName" .. TOWN_BID)}), General.defaultFont, 20, {colorR = 255, colorG = 255, colorB = 255})
@@ -84,9 +108,9 @@ do
 		bg:addChild(temp)
 		scrollView:addChildTouchNode(bg, buyBuild, info)
 		if info.info then
-			temp = UI.createSpriteWithFile("images/dialogItemButtonInfo.png",CCSizeMake(38, 40))
-			screen.autoSuitable(temp, {nodeAnchor=General.anchorCenter, x=248, y=205})
-			bg:addChild(temp)
+			temp = UI.createSpriteWithFile("images/rankIcon.png",CCSizeMake(33, 37))
+            screen.autoSuitable(temp, {nodeAnchor=General.anchorCenter, x=251, y=202})
+            bg:addChild(temp)
 			scrollView:addChildTouchNode(temp, updateFlip, {bg=bg, scrollView=scrollView, info=info, cellUpdate=updateFlipCell})
 		end
 		if info.buildsNum and info.buildsNum >= info.levelLimit then
@@ -184,7 +208,12 @@ do
 			
 			scrollView:addChildTouchNode(bg, CrystalLogic.buyCrystal, info)
 		else
-			temp = UI.createLabel(tostring(info.cost), "fonts/font3.fnt", 20, {colorR = 255, colorG = 255, colorB = 255})
+		    local colorSetting = {colorR = 255, colorG = 255, colorB = 255}
+		    if info.cost>UserData.crystal then
+		        colorSetting.colorG=0
+		        colorSetting.colorB=0
+		    end
+			temp = UI.createLabel(tostring(info.cost), "fonts/font3.fnt", 20, colorSetting)
 			screen.autoSuitable(temp, {x=142, y=31, nodeAnchor=General.anchorCenter})
 			bg:addChild(temp)
 			local w = temp:getContentSize().width/2 * temp:getScaleX()
@@ -209,12 +238,12 @@ do
 		for i=1, 5 do
 			-- in app pay
 			local info = {resource="crystal", cost=TEST_INFO[i], get=crystals[i], text=StringManager.getString("storeItemCrystal" .. i), img="images/storeItemCrystal" .. i .. ".png"}
-			if i==1 then info.img = nil end
 			table.insert(infos, info)
 		end
 		
-		local types = {"food", "oil"}
-		local tmap = {food="Food", oil="Oil"}
+		local types = {"food", "oil", "person"}
+		local tmap = {food="Food", oil="Oil", person="Person"}
+		local resourceBids = {food=2003, oil=2001, person=2005}
 		for i=1, #types do	
 			local resourceType = types[i]
 			local num = ResourceLogic.getResource(resourceType)
@@ -222,17 +251,17 @@ do
 			
 			local prefix = "images/storeItem" .. tmap[resourceType]
 			if num*10/9<max then
-				local info = {resource=resourceType, get=max/10, text=StringManager.getString("storeItemResource1"), img=prefix .. "1.png"}
+				local info = {resource=resourceType, get=math.ceil(max/10), text=StringManager.getString("storeItemResource1"), img=prefix .. "1.png"}
 				info.cost = CrystalLogic.computeCostByResource(resourceType, info.get)
 				table.insert(infos, info)
 			end
 			if num*2<max then
-				local info = {resource=resourceType, get=max/2, text=StringManager.getString("storeItemResource2"), img=prefix .. "2.png"}
+				local info = {resource=resourceType, get=math.ceil(max/2), text=StringManager.getString("storeItemResource2"), img=prefix .. "2.png"}
 				info.cost = CrystalLogic.computeCostByResource(resourceType, info.get)
 				table.insert(infos, info)
 			end
 			if num<max then
-				local info = {resource=resourceType, get=max-num, text=StringManager.getFormatString("storeItemResource3", {name=StringManager.getString(resourceType)}), img=prefix .. "3.png"}
+				local info = {resource=resourceType, get=max-num, text=StringManager.getFormatString("storeItemResource3", {name=StringManager.getString("dataBuildName" .. resourceBids[resourceType])}), img=prefix .. "3.png"}
 				info.cost = CrystalLogic.computeCostByResource(resourceType, info.get)
 				table.insert(infos, info)
 			end
@@ -249,7 +278,11 @@ do
 	end
 	
 	local function showShieldTab(param)
-		param.infos = {{id=1, name="1 day", time=86400, info="1 day shield", costType="crystal", costValue=100}, {id=2, name="2 day", time=172800, info="2 day shield", costType="crystal", costValue=150}, {id=3, name="1 week", time=604800, info="1 week shield", costType="crystal", costValue=250}}
+		param.infos = {{id=1,time=86400,costType="crystal",costValue=100}, {id=2,time=172800,costType="crystal", costValue=150}, {id=3, time=604800, costType="crystal", costValue=250}}
+		for i=1, 3 do
+		    param.infos[i].name = StringManager.getString("storeItemShieldName" .. i)
+		    param.infos[i].info = StringManager.getString("storeItemShieldInfo" .. i)
+		end
 		showStoreTab(param)
 	end
 	
@@ -264,13 +297,13 @@ do
 		local tid = math.ceil(info.id/2)+(info.id-1)%2*3
 		info.tid = tid
 		
-		if not GuideLogic.complete then
-			local setting = GuideLogic.pointerSetting
-			if setting and setting[2]=="shop" and tid==setting[3] then
+		if not GuideLogic.complete and GuideLogic.guideBid then
+		    local type = math.floor(GuideLogic.guideBid/1000)+1
+		    if type==1 then type=3 end
+			if type==info.id then
 				local pt = UI.createGuidePointer(-45)
 				pt:setPosition(70, 165)
-				pt:setScale(0.5)
-				temp:addChild(pt)
+				cell:addChild(pt,10)
 			end
 		end
 		
@@ -303,13 +336,13 @@ do
 			callback = showTreasureTab
 		else
 			if info.tid==2 then
-				info.bids = {2000, 2001, 2002, 2006, 2004, 2005}
+				info.bids = {2000, 2001, 2002, 2003, 2004, 0, 2005}
 			elseif info.tid==4 then
 				info.bids = {1000, 1001, 1002}
 			elseif info.tid==5 then
 				info.bids = {3000, 3001, 3002, 3003, 3004, 3005, 3006, 3007, 5000, 5001, 5002}
 			else
-				info.bids = {}
+				info.bids = {6000, 6001, 6002, 6003}
 			end
 			callback = showBuildTab
 		end

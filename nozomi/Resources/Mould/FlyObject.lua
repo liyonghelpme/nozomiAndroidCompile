@@ -106,8 +106,12 @@ function CannonShot:update(diff)
 		self:resetView()
 	end
 	if self.state==2 then
-		local delta = stateTime/self.time[2]
-		self.view:setPosition(self.initPos[1] + (self.targetPos[1]-self.initPos[1])*delta, self.initPos[2] + (self.targetPos[2]-self.initPos[2])*delta)
+		--local delta = stateTime/self.time[2]
+		--if not self.target.deleted then
+		--    local x, y = self.target.view:getPosition()
+		--    self.targetPos = {x, y+self.target.viewInfo.y}
+		--end
+		--self.view:setPosition(self.initPos[1] + (self.targetPos[1]-self.initPos[1])*delta, self.initPos[2] + (self.targetPos[2]-self.initPos[2])*delta)
 	end
 	self.stateTime = stateTime
 end
@@ -116,25 +120,12 @@ function CannonShot:initView()
 	local distance = self.scene.mapGrid:getGridDistance(self.targetPos[1]-self.initPos[1], self.targetPos[2]-self.initPos[2])
 	self.time = {0.5, distance*10/self.speed, 0.5}
 	self.state = 1
-	if self.target.viewInfo then
-		-- is soldier
-		if self.target.state == PersonState.STATE_MOVING then
-			local stateInfo = self.target.stateInfo
-			if stateInfo.toPoint then
-				local delta = (self.target.stateTime-stateInfo.beginTime+self.time[1])/stateInfo.moveTime
-				if delta<0 or delta>=1 then
-					self.targetPos = {stateInfo.toPoint[1], stateInfo.toPoint[2]+self.target.viewInfo.y}
-				else
-					self.targetPos = {stateInfo.fromPoint[1] + delta*(stateInfo.toPoint[1]-stateInfo.fromPoint[1]), stateInfo.fromPoint[2] + delta*(stateInfo.toPoint[2]-stateInfo.fromPoint[2])+self.target.viewInfo.y}
-				end
-			end
-		end
-	end
 	self:resetView()
 end
 
-local CANNON_SCALE = {0.43, 0.43, 0.46, 0.57, 0.6, 0.63, 0.71, 0.74, 0.86, 1, 1.03}
-local CANNON_OFFSET={0, 45, -90}
+local CANNON_SCALE = {0.43, 0.43, 0.46, 0.57, 0.6, 0.63, 0.71, 0.74, 0.74, 0.74, 0.74}
+local CANNON_OFFSET={180, 40, 280}
+local CANNON_COLOR ={ccc4f(0.21, 0.88, 0.99, 1), ccc4f(1, 0.85, 0.23, 1), ccc4f(0.8, 0.15, 0.97, 1)}
 
 function CannonShot:resetView()
 	local ox, oy = self.targetPos[1] - self.initPos[1], self.targetPos[2] - self.initPos[2]
@@ -145,7 +136,7 @@ function CannonShot:resetView()
 		if self.target.deleted then
 			return
 		end
-		self.view = Effect.createGatherEffect(dir, self.time[1])
+		self.view = Effect.createGatherEffect(dir, self.time[1], CANNON_COLOR[math.ceil(self.level/4)])
 		self.view:setScale(CANNON_SCALE[self.level]/CANNON_SCALE[1])
 		screen.autoSuitable(self.view, {nodeAnchor=General.anchorCenter, x=self.initPos[1], y=self.initPos[2]})
 		simpleRegisterEvent(self.view, {update={inteval=self.time[1], callback=self.update}}, self)
@@ -154,14 +145,43 @@ function CannonShot:resetView()
 		if self.target.deleted then
 			return
 		end
+		
+    	if self.target.viewInfo then
+    		-- is soldier
+    		local x, y = self.target.view:getPosition()
+    		self.targetPos = {x, y+self.target.viewInfo.y}
+    		local distance = self.scene.mapGrid:getGridDistance(self.targetPos[1]-self.initPos[1], self.targetPos[2]-self.initPos[2])
+    		local t2 = distance*10/self.speed
+    		self.time[2] = t2
+    		if self.target.state == PersonState.STATE_MOVING then
+    			local stateInfo = self.target.stateInfo
+    			if stateInfo.toPoint then
+    				local delta = (self.target.stateTime-stateInfo.beginTime+t2)/stateInfo.moveTime
+    				if delta<0 or delta>=1 then
+    					self.targetPos = {stateInfo.toPoint[1], stateInfo.toPoint[2]+self.target.viewInfo.y}
+    				else
+    					self.targetPos = {stateInfo.fromPoint[1] + delta*(stateInfo.toPoint[1]-stateInfo.fromPoint[1]), stateInfo.fromPoint[2] + delta*(stateInfo.toPoint[2]-stateInfo.fromPoint[2])+self.target.viewInfo.y}
+    				end
+    			end
+    		end
+    	end
 		self.view = UI.createAnimateSprite(0.5, "animate/build/3000/attack_", 24, {useExtend=true})
 		self.view:setScale(CANNON_SCALE[self.level])
 		self.view:setHueOffset(CANNON_OFFSET[math.ceil(self.level/4)])
 		screen.autoSuitable(self.view, {nodeAnchor=General.anchorCenter, x=self.initPos[1], y=self.initPos[2]})
-		simpleRegisterEvent(self.view, {update={inteval=0, callback=self.update}}, self)
+		self.view:runAction(CCMoveTo:create(self.time[2], CCPointMake(self.targetPos[1], self.targetPos[2])))
+		
+		if self.level==11 then
+		    local ssize = self.view:getContentSize()
+		    local temp = UI.createAnimateWithSpritesheet(0.5, "cannonThunder_", 24, {plist="animate/build/3000/cannonThunder.plist"})
+		    screen.autoSuitable(temp, {nodeAnchor=General.anchorCenter, x=ssize.width/2, y=ssize.height/2})
+		    self.view:addChild(temp, -1)
+		end
+		
+		simpleRegisterEvent(self.view, {update={inteval=self.time[2], callback=self.update}}, self)
 		self.scene.ground:addChild(self.view, self.scene.SIZEY)
 	elseif self.state==3 then
-		self.view = Effect.createBombEffect(self.time[3])
+		self.view = Effect.createBombEffect(self.time[3], CANNON_COLOR[math.ceil(self.level/4)])
 		self.view:setScale(CANNON_SCALE[self.level]/CANNON_SCALE[1])
 		screen.autoSuitable(self.view, {nodeAnchor=General.anchorCenter, x=self.targetPos[1], y=self.targetPos[2]})
 		simpleRegisterEvent(self.view, {update={inteval=self.time[3], callback=self.update}}, self)
@@ -232,8 +252,8 @@ function GunShot:update(diff)
 		if state==1 then
 			self.target:damage(self.attackValue)
 			local temp = UI.createAnimateSprite(self.time[2], "animate/build/3007/attacked_", 3)
-			--temp:setRotation(math.random(360))
-			screen.autoSuitable(temp, {nodeAnchor=General.anchorCenter, x=self.targetPos[1], y=self.targetPos[2]})
+			temp:setRotation(math.random(360))
+			screen.autoSuitable(temp, {nodeAnchor=General.anchorCenter, x=self.targetPos[1]+math.random(40)-20, y=self.targetPos[2]+math.random(30)-15})
 			self.view2 = temp
 			self.scene.ground:addChild(self.view2, self.scene.SIZEY-1)
 			self.view:setVisible(false)
@@ -321,7 +341,7 @@ function LaserShot:resetView()
 		
 		self.view = UI.createSpriteWithFile("images/effects/laser.png", nil, self.level>1)
 		if self.level==2 then
-			self.view:setHueOffset(-140)
+			self.view:setHueOffset(220)
 		elseif self.level==3 then
 			self.view:setHueOffset(118)
 		end
@@ -502,6 +522,10 @@ end
 
 AirShot = class(SingleShot)
 
+function AirShot:ctor(attackValue, speed, x, y, z, target, height)
+    self.height = height
+end
+
 function AirShot:update(diff)
 	diff = diff * (self.scene.speed or 1)
 	local stateTime = self.stateTime + diff
@@ -544,15 +568,11 @@ function AirShot:resetView()
 		if self.target.deleted then
 			return
 		end
-		local ox, oy = self.targetPos[1] - self.initPos[1], self.targetPos[2] - self.initPos[2]
-		local dir = 0
-		local temp = math.deg(math.atan2(oy, ox))
-		dir = 180-temp
 		
 		self.view = UI.createSpriteWithFile("animate/build/3004/attack.png")
 		self.view:setAnchorPoint(CCPointMake(0.5, 0.5))
 		self.view:setPosition(self.initPos[1], self.initPos[2])
-		self.view:setRotation(dir)
+		self.view:setRotation(-180)
 		
 		self.flame = UI.createAnimateWithSpritesheet(getParam("flameActionTime", 1000)/1000, "flame_", 19, {plist="animate/builder/flame.plist"})
 		screen.autoSuitable(self.flame, {nodeAnchor=General.anchorTop, x=59, y=11})
@@ -561,9 +581,10 @@ function AirShot:resetView()
 		self.flame:setRotation(-90)
 		self.view:addChild(self.flame, -1)
 		
-		self.view:runAction(CCEaseIn:create(CCMoveBy:create(self.time[1], CCPointMake(ox, oy)), 2))
+		--self.view:runAction(CCEaseIn:create(CCMoveBy:create(self.time[1], CCPointMake(ox, oy)), 2))
+		Action.runGravityMove(self.view, self.time[1], self.initPos[1], self.initPos[2], self.targetPos[1], self.targetPos[2], self.height, self.target.viewInfo.y)
 		
-		simpleRegisterEvent(self.view, {update={inteval=0, callback=self.update}}, self)
+		simpleRegisterEvent(self.view, {update={inteval=self.time[1], callback=self.update}}, self)
 		self.scene.sky:addChild(self.view, self.scene.SIZEY+20000)
 	elseif self.state==2 then
 	
@@ -587,6 +608,7 @@ function AreaSplash:ctor(attackValue, speed, x, y, targetX, targetY, damageRange
 end
 
 function AreaSplash:executeDamage()
+	--local num = 0
 	if self.group==GroupTypes.Attack then
 		local grid = self.scene.mapGrid:convertToGrid(self.targetPos[1], self.targetPos[2])
 		local gx, gy = grid.gridPosX + grid.gridFloatX, grid.gridPosY + grid.gridFloatY
@@ -610,6 +632,7 @@ function AreaSplash:executeDamage()
 				end
 				if inDis then
 					enemy.buildView:damage(self.attackValue)
+					--num=num+1
 				end
 			end
 		end
@@ -619,8 +642,10 @@ function AreaSplash:executeDamage()
 				if not enemy.deleted and enemy.info.unitType<=self.unitType then
 					local x, y = enemy.view:getPosition()
 					local dis = self.scene.mapGrid:getGridDistance(self.targetPos[1]-x, self.targetPos[2]-y)
+					--print(dis, self.damageRange)
 					if dis < self.damageRange then
 						enemy:damage(self.attackValue)
+					    --num=num+1
 					end
 				end
 			end
@@ -632,17 +657,20 @@ function AreaSplash:executeDamage()
 					local dis = self.scene.mapGrid:getGridDistance(self.targetPos[1]-x, self.targetPos[2]-y)
 					if dis < self.damageRange then
 						enemy:damage(self.attackValue)
+					    --num=num+1
 					end
 				end
 			end
 		end
 	end
+	--print("splashAttackNum", num)
 end
 
 MagicSplash = class(AreaSplash)
 
 --(attackValue, speed, x, y, targetX, targetY, damageRange, group, unitType)
-function MagicSplash:ctor(attack, speed, x, y, targetX, targetY, damageRange, group, unitType, target)
+function MagicSplash:ctor(attack, speed, x, y, targetX, targetY, damageRange, group, unitType, level, target)
+    self.level = level
 	if target then
 		-- is single shot
 		self.target = target
@@ -657,21 +685,22 @@ function MagicSplash:update(diff)
 	if stateTime >= self.time[state] then
 		self.state = state+1
 		stateTime = stateTime - self.time[state]
+		self.view:removeFromParentAndCleanup(true)
 		if state==1 then
 			if self.target then
 				self.target:damage(self.attackValue)
 			else
 				self:executeDamage()
 			end
+			self:resetView()
 		end
-		self.view:removeFromParentAndCleanup(true)
 	end
 	self.stateTime = stateTime
 end
 
 function MagicSplash:initView()
 	local distance = self.scene.mapGrid:getGridDistance(self.targetPos[1]-self.initPos[1], self.targetPos[2]-self.initPos[2])
-	self.time = {distance*10/self.speed}
+	self.time = {distance*10/self.speed, 0.5}
 	self.state = 1
 	self:resetView()
 end
@@ -699,8 +728,13 @@ function MagicSplash:resetView()
 		--temp:runAction(CCScaleTo:create(self.time[1], 2*math.sqrt(ox*ox+oy*oy)/365, 1))
 		--self.view:addChild(temp, -1)
 		
-		self.view = UI.createSpriteWithFile("images/effects/magicWave.png")
-		self.view:setAnchorPoint(CCPointMake(0.02, 0.47))
+		self.view = UI.createSpriteWithFile("images/effects/magicWave.png", nil, true)
+		if self.level==1 then
+		    self.view:setHueOffset(280)
+		elseif self.level==2 then
+		    self.view:setHueOffset(118)
+		end
+		self.view:setAnchorPoint(CCPointMake(0.06, 0.47))
 		self.view:setPosition(self.initPos[1], self.initPos[2])
 		self.view:setScaleY(0.5)
 		self.view:setScaleX(0)
@@ -711,6 +745,26 @@ function MagicSplash:resetView()
 		
 		simpleRegisterEvent(self.view, {update={inteval=self.time[1], callback=self.update}}, self)
 		self.scene.ground:addChild(self.view, self.scene.SIZEY)
+	elseif self.state==2 then
+	    self.view = UI.createAnimateWithSpritesheet(self.time[2], "magicBomb_", 7, {plist="animate/effects/magicBomb.plist", useExtend=true})
+	    screen.autoSuitable(self.view, {nodeAnchor=General.anchorCenter, x=self.targetPos[1], y=self.targetPos[2]})
+		simpleRegisterEvent(self.view, {update={inteval=self.time[2], callback=self.update}}, self)
+		
+		--temp = UI.createAnimateWithSpritesheet(self.time[2], "magicBomb_", 4, {plist="animate/effects/magicBomb.plist"})
+		--screen.autoSuitable(temp)
+        --local blend = ccBlendFunc:new()
+       -- blend.src = 1
+        --blend.dst = 1
+        --temp:setBlendFunc(blend)
+	    --self.view:addChild(temp)
+	    
+		self.scene.ground:addChild(self.view, self.scene.SIZEY)
+	end
+	
+	if self.level==1 then
+	    self.view:setHueOffset(280)
+	elseif self.level==2 then
+	    self.view:setHueOffset(118)
 	end
 end
 
@@ -757,8 +811,8 @@ function BalloonSplash:resetView()
 		if flip then
 			self.view:setFlipX(true)
 		end
+		self.view:setScale(0.66)
 		screen.autoSuitable(self.view, {nodeAnchor=General.anchorCenter, x=self.initPos[1], y=self.initPos[2]})
-		--self.view:setScale(0.5)
 		
 		self.view:runAction(CCEaseIn:create(CCMoveBy:create(self.time[1], CCPointMake(0, oy)), 2))
 		
@@ -769,15 +823,14 @@ function BalloonSplash:resetView()
 		screen.autoSuitable(self.view, {nodeAnchor=General.anchorCenter, x=self.targetPos[1], y=self.targetPos[2]})
 		
 		local t = 1
-		local temp = UI.createAnimateWithSpritesheet(1, "ballonAttacked_", 9, {plist="animate/soliders/6/balloonAttacked.plist"})
+		local temp = UI.createAnimateWithSpritesheet(1, "balloonAttacked_", 9, {plist="animate/soldiers/6/balloonAttacked.plist"})
 		screen.autoSuitable(temp, {nodeAnchor=General.anchorCenter, x=55, y=55})
-		temp:runAction(CCFadeOut:create(t))
 		
 		local array = CCArray:create()
 		array:addObject(CCEaseSineOut:create(CCMoveBy:create(t/3, CCPointMake(0, 40))))
 		array:addObject(CCEaseIn:create(CCMoveBy:create(t/3, CCPointMake(0, -40)), 2))
-		array:addObject(CCEaseSineOut:create(CCMoveBy:create(t/3, CCPointMake(0, 20))))
 		temp:runAction(CCSequence:create(array))
+		temp:runAction(CCFadeOut:create(t*2/3))
 		self.view:addChild(temp)
 		
 		simpleRegisterEvent(self.view, {update={inteval=self.time[2], callback=self.update}}, self)
@@ -812,60 +865,46 @@ end
 
 function MortarSplash:initView()
 	local distance = self.scene.mapGrid:getGridDistance(self.targetPos[1]-self.initPos[1], self.targetPos[2]-self.initPos[2]+self.height)
-	self.time = {distance*10/self.speed, 1}
+	self.time = {distance*10/self.speed, 1.4}
 	self.state = 1
 	self:resetView()
 end
 
 function MortarSplash:resetView()
 	if self.state==1 then
-		local ox, oy = self.targetPos[1] - self.initPos[1], self.targetPos[2] - self.initPos[2] + self.height
-		
-		self.view = UI.createAnimateSprite(1, "animate/build/3002/attackBall1_", 6)
+		local ballLevel = 1
+		if self.level>=4 then ballLevel=2 end
+		self.view = UI.createAnimateWithSpritesheet(1, "mortarBall" .. ballLevel .. "_", 6, {plist="animate/build/3002/mortarBall" .. ballLevel .. ".plist"})
 		
 		screen.autoSuitable(self.view, {nodeAnchor=General.anchorCenter, x=self.initPos[1], y=self.initPos[2]})
-		self.view:setScale(0.5)
-		
-		self.view:runAction(CCMoveBy:create(self.time[1], CCPointMake(ox, oy)))
-		
-		local h, g, t = self.height, 500, self.time[1]
-		local temp  = (2*h+g*t*t)
-		local H = temp*temp/8/g/t/t
-		local t1 = (t-2*h/g/t)/2
-		local array = CCArray:create()
-		array:addObject(CCEaseSineOut:create(CCMoveBy:create(t1, CCPointMake(0, H-h))))
-		array:addObject(CCEaseIn:create(CCMoveBy:create(t-t1, CCPointMake(0, -H)), 2))
-		self.view:runAction(CCSequence:create(array))
-		
+		--self.view:setScale(0.5)
 		temp = CCParticleSystemQuad:create("images/effects/mortarFog.plist")
     	temp:setPositionType(kCCPositionTypeGrouped)
 		screen.autoSuitable(temp, {x=self.view:getContentSize().width/2, y=self.view:getContentSize().height/2})
-		
-		local mx, my = self.initPos[1]+t1/t*ox, self.initPos[2]+t1/t*oy+H-h
-		local angle1 = 270 - math.deg(math.atan2(my-self.initPos[2], (mx-self.initPos[1])/2))
-		local angle2 = 270 - math.deg(math.atan2(self.targetPos[2]-my, (self.targetPos[1]-mx)/2))
-		--local angle1 = 270 - math.deg(math.atan2(H-h, (mx-self.initPos[1])/2))
-		--local angle2 = 270 - math.deg(math.atan2(-H, (self.targetPos[1]-mx)/2))
-		temp:setRotation(angle1)
 		temp:setScale(2)
-		temp:runAction(CCRotateTo:create(t, angle2))
+		self.view:setRotation(-90)
 		self.view:addChild(temp, -1)
+		
+		Action.runGravityMove(self.view, self.time[1], self.initPos[1], self.initPos[2], self.targetPos[1], self.targetPos[2], self.height, 0)
 		
 		simpleRegisterEvent(self.view, {update={inteval=self.time[1], callback=self.update}}, self)
 		self.scene.sky:addChild(self.view, self.initZorder)
 	elseif self.state==2 then
-		self.view = UI.createAnimateWithSpritesheet(self.time[2], "mortarSmoke_", 11, {plist="animate/build/3002/mortarSmoke.plist", isRepeat=false})
+		self.view = UI.createAnimateWithSpritesheet(self.time[2], "mortarSmoke_", 14, {plist="animate/build/3002/mortarSmoke.plist", isRepeat=false})
 		screen.autoSuitable(self.view, {nodeAnchor=General.anchorCenter, x=self.targetPos[1], y=self.targetPos[2]})
-		--self.view:setScale(0.5)
+		delayRemove(self.time[2], self.view)
 		
 		local ssize = self.view:getContentSize()
-		local temp = UI.createAnimateWithSpritesheet(self.time[2], "mortarFire_", 11, {plist="animate/build/3002/mortarFire.plist", isRepeat=false})
+		local temp = UI.createAnimateWithSpritesheet(self.time[2]*11/14, "mortarFire_", 11, {plist="animate/build/3002/mortarFire.plist", isRepeat=false})
 		screen.autoSuitable(temp, {nodeAnchor=General.anchorCenter, x=ssize.width/2, y=ssize.height/2})
 		self.view:addChild(temp)
+		delayRemove(self.time[2]*11/14, temp)
 		
-		temp = UI.createAnimateWithSpritesheet(self.time[2], "mortarBomb_", 6, {plist="animate/build/3002/mortarBomb.plist", isRepeat=false})
-		screen.autoSuitable(temp, {nodeAnchor=General.anchorCenter, x=ssize.width/2+1, y=ssize.height/2-36})
+		temp = UI.createAnimateWithSpritesheet(self.time[2]/3, "mortarBomb_", 6, {plist="animate/build/3002/mortarBomb.plist", isRepeat=false})
+		screen.autoSuitable(temp, {nodeAnchor=General.anchorCenter, x=ssize.width/2+1, y=ssize.height/2-30})
+		temp:setScale(0.75)
 		self.view:addChild(temp)
+		delayRemove(self.time[2]/3, temp)
 		
 		--local array = CCArray:create()
 		--array:addObject(CCEaseSineOut:create(CCMoveBy:create(self.time[2]/3, CCPointMake(0, 20))))
@@ -874,9 +913,9 @@ function MortarSplash:resetView()
 		--temp:runAction(CCSequence:create(array))
 		--self.view:addChild(temp)
 		
-		simpleRegisterEvent(self.view, {update={inteval=self.time[2], callback=self.update}}, self)
+		--simpleRegisterEvent(self.view, {update={inteval=self.time[2], callback=self.update}}, self)
 		self.scene.ground:addChild(self.view, self.scene.SIZEY - self.targetPos[2])
-		
+		self.scene.ground:runAction(CCShake:create(self.time[2], 10*self.scene.ground:getScale()))
 	end
 end
 

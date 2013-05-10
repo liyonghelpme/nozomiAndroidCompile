@@ -47,15 +47,15 @@ do
     	local isRepeat = params.isRepeat
     	if isRepeat == nil then isRepeat = true end
     	local rollback = params.isRollback
-    	--local useExtend = params.useExtend
+    	local useExtend = params.useExtend
     	CCSpriteFrameCache:sharedSpriteFrameCache():addSpriteFramesWithFile(params.plist)
     	local sprite
     	
-    	--if useExtend then
-    	--	sprite = CCExtendSprite:create(prefix .. beginNum .. suffix)
-    	--else
-    	sprite = CCSprite:createWithSpriteFrameName(prefix .. beginNum .. suffix)
-    	--end
+    	if useExtend then
+    	    sprite = CCExtendSprite:createWithSpriteFrameName(prefix .. beginNum .. suffix)
+    	else
+    	    sprite = CCSprite:createWithSpriteFrameName(prefix .. beginNum .. suffix)
+    	end
     	
         local animation = CCAnimation:create()
         for i = beginNum, endNum do
@@ -88,9 +88,9 @@ do
         local r, g, b = params.colorR or 255, params.colorG or 255, params.colorB or 255
 	    local lineOffset = params.lineOffset or 0
         
-        --if fontName==General.specialFont then
-        	--fontSize = fontSize-2
-        --end
+        if fontName=="fonts/font2.fnt" then
+        	fontSize = fontSize+2
+        end
         text = string.gsub(text, "'", "’")
         local label = nil
 	    local baseSize = 35
@@ -206,6 +206,24 @@ do
 			end
 		end
 	end
+	
+	local function setHighLight(node)
+	    CCExtendNode.setValOffset(node, 20)
+	end
+	
+	local function setNormalLight(node)
+	    CCExtendNode.setValOffset(node, 0)
+	end
+	
+	local function specialAnimate(node)
+	    local array = CCArray:create()
+	    array:addObject(CCScaleTo:create(0.2, 1.1, 1.1))
+	    --array:addObject(CCCallFuncN:create(setHighLight))
+	    --array:addObject(CCDelayTime:create(0.02))
+	    --array:addObject(CCCallFuncN:create(setNormalLight))
+	    array:addObject(CCScaleTo:create(0.2, 1, 1))
+	    node:runAction(CCSequence:create(array))
+	end
     
     local function createButton(size, callback, setting)
     	local params = setting or {}
@@ -239,7 +257,7 @@ do
     		local fontName = params.fontName or General.defaultFont
     		local colorR, colorG, colorB = params.colorR or 255, params.colorG or 255, params.colorB or 255
     		local lineOffset = params.lineOffset or 0
-    		local label = createTTFLabel(buttonText, fontName, fontSize, {size = CCSizeMake(size.width*0.8, size.height), colorR = colorR, colorG = colorG, colorB = colorB, lineOffset=lineOffset})
+    		local label = createTTFLabel(buttonText, fontName, fontSize, {size = CCSizeMake(size.width, size.height), colorR = colorR, colorG = colorG, colorB = colorB, lineOffset=lineOffset})
 	    	screen.autoSuitable(label, {nodeAnchor=General.anchorCenter, x=size.width/2, y=size.height/2})
     		node:addChild(label)
     	end
@@ -309,14 +327,21 @@ do
     		if isTouched then
     			state.tapTime = (state.tapTime or 0)+diff
     			if not state.calling then
-	    			if state.tapTime > 1 then
+	    			if state.tapTime > 0.6 then
 	    				state.calling = true
 	    				state.tapTime = 0
+	    				specialAnimate(node)
+	    				state.animateTime = 0.4
 	    				callback(callbackParam)
 	    			end
 	    		else
 	    			if state.tapTime>0.1 then
+	    				state.animateTime = state.animateTime - state.tapTime
 	    				state.tapTime = 0
+	    				if state.animateTime<0 then
+    	    				specialAnimate(node)
+	    				    state.animateTime = 0.4
+    	    			end
 	    				callback(callbackParam)
 	    			end
 	    		end
@@ -329,37 +354,45 @@ do
     	return node
     end
     
-    local function createNotice(text)
-    	local bg = createTTFLabel(text, General.defaultFont, 24, {colorR=255, colorG=0, colorB=0, size=CCSizeMake(900, 0)})
+    local function createNotice(text, colorGB)
+    	local bg = createTTFLabel(text, General.specialFont, 24, {colorR=255, colorG=colorGB or 0, colorB=colorGB or 0, size=CCSizeMake(900, 0)})
 		screen.autoSuitable(bg, {screenAnchor=General.anchorTop, y=-160, scaleType = screen.SCALE_CUT_EDGE})
 		return bg
     end
     
     local function createSwitch(size, callback, on, setting)
     	local params = setting or {}
-    	local onImage = params.onImage or "images/onButton.png"
-    	local offImage = params.offImage or "images/offButton.png"
+    	local onImage = params.onImage or "images/buttonGreenB.png"
+    	local offImage = params.offImage or "images/buttonEnd.png"
     	local priority = params.priority or display.DIALOG_BUTTON_PRI
     	
     	local node = CCNode:create()
     	node:setContentSize(size)
     	
     	local sprite = nil
+		local label = nil
     	if on then
     		sprite = createSpriteWithFile(onImage, size)
+    		label = createTTFLabel(StringManager.getString("switchOn"), "fonts/font3.fnt", 20)
 		else
 		    sprite = createSpriteWithFile(offImage, size)
+    		label = createTTFLabel(StringManager.getString("switchOff"), "fonts/font3.fnt", 20)
 	    end
 		sprite:setAnchorPoint(General.anchorLeftBottom)
 		node:addChild(sprite)
+		label:setAnchorPoint(General.anchorCenter)
+		label:setPosition(size.width/2, size.height/2)
+		node:addChild(label, 1)
 		
 		local state = on
 		local function switchOn()
 			state = not state
 			if state then
 				sprite:setTexture(CCTextureCache:sharedTextureCache():addImage(onImage))
+				label:setString(StringManager.getString("switchOn"))
 			else
 				sprite:setTexture(CCTextureCache:sharedTextureCache():addImage(offImage))
+				label:setString(StringManager.getString("switchOff"))
 			end
 			callback(state)
 		end
@@ -410,16 +443,18 @@ function UI.testChangeScene(isIn)
 	local pz = {{0, 256}, {342, 0}, {0, 0}, {0, 512}, {684, 0}}
 	local epz = {{530, 704}, {900, 386}, {800, 600}, {285, 840}, {1140, 280}}
 	
-	local a1, a2, b, c = 0, 0.18, 0.98, 0.14
+	local a1, a2, b, c = 0, 0.18, 1.08, 0.16 
+	--0.98, 0.14
+	
+	local batch = CCSpriteBatchNode:create("images/fog.png")
+	batch:setContentSize(CCSizeMake(1024, 768))
+	local t = getParam("actionTimeChangeScene", 600)/1000
 	
 	if not isIn then
 		pz, epz = epz, pz
 		a1, a2 = 0.16, 0.04
+		t = t*2.5
 	end
-	
-	local batch = CCSpriteBatchNode:create("images/fog.png")
-	batch:setContentSize(CCSizeMake(1024, 768))
-	local t = getParam("actionTimeChangeScene", 1000)/1000
 	
 	for i=1, 5 do
 		local temp, array
@@ -427,7 +462,7 @@ function UI.testChangeScene(isIn)
 		temp = CCSprite:create("images/fog.png")
 		temp:setScale(4)
 		screen.autoSuitable(temp, {nodeAnchor=General.anchorRightTop, x=pz[i][1], y=pz[i][2]})
-		batch:addChild(temp)
+		batch:addChild(temp, i*2)
 		array = CCArray:create()
 		array:addObject(CCDelayTime:create(t*(a1+a2*(i-1))))
 		array:addObject(CCMoveTo:create(t*(b-c*i), CCPointMake(epz[i][1], epz[i][2])))
@@ -436,7 +471,7 @@ function UI.testChangeScene(isIn)
 		temp = CCSprite:create("images/fog.png")
 		temp:setScale(4)
 		screen.autoSuitable(temp, {nodeAnchor=General.anchorLeftBottom, x=1024-pz[i][1], y=768-pz[i][2]})
-		batch:addChild(temp)
+		batch:addChild(temp, i*2+1)
 		array = CCArray:create()
 		array:addObject(CCDelayTime:create(t*(a1+a2*(i-1))))
 		array:addObject(CCMoveTo:create(t*(b-c*i), CCPointMake(1024-epz[i][1], 768-epz[i][2])))
@@ -445,7 +480,7 @@ function UI.testChangeScene(isIn)
 	screen.autoSuitable(batch, {screenAnchor=General.anchorCenter, scaleType=screen.SCALE_NORMAL})
 	display.getCurrentScene().scene:addChild(batch, 10000)
 	if isIn then
-		delayRemove(t+1, batch)
+		delayRemove(t, batch)
 	else
 		delayRemove(10, batch)
 	end

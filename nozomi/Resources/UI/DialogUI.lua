@@ -26,10 +26,10 @@ function InfoProcessItem:ctor(number1, number2, max, infoType, infoIcon)
         typeText = "upgradeType"
         if number2>number1 then
             numberText = number1 .. "+" .. (number2-number1)
-            temp = UI.createSpriteWithFile("images/dialogItemInfoProcessFiller.png",CCSizeMake(340, 22), true)
+            temp = UI.createSpriteWithFile("images/dialogItemUpgradeProcessFiller.png",CCSizeMake(340, 22))
             screen.autoSuitable(temp, {x=2, y=2})
             self.bg:addChild(temp)
-            temp:setValOffset(20)
+            --temp:setHueOffset(100)
             temp:setTextureRect(CCRectMake(0,0,self.processSize.width*number2/self.max,self.processSize.height))
         end
     end
@@ -84,7 +84,7 @@ function UI.addInfoItem2(bg, index, number1, number2, max, infoType, infoIcon, d
     return item
 end
 
-function UI.createMenuButton(size, buttonBg, callback, callbackParam, buttonImage, buttonText, fontSize)
+function UI.createMenuButton(size, buttonBg, callback, callbackParam, buttonImage, buttonText, fontSize, colors)
     local but = UI.createButton(size, callback, {callbackParam=callbackParam, image=buttonBg, priority=display.MENU_BUTTON_PRI})
     local temp
     
@@ -95,8 +95,14 @@ function UI.createMenuButton(size, buttonBg, callback, callbackParam, buttonImag
     end
     
     if buttonText then
-        temp = UI.createLabel(buttonText, "fonts/font3.fnt", fontSize or 14, {size=CCSizeMake(size.width*0.8, size.height/2), lineOffset=-12})
-        screen.autoSuitable(temp, {nodeAnchor=General.anchorCenter, x=size.width/2, y=size.height*1/5})
+        local setting = {size=CCSizeMake(size.width*0.8, size.height/2), lineOffset=-12}
+        if colors then
+            setting.colorR = colors[1]
+            setting.colorG = colors[2]
+            setting.colorB = colors[3]
+        end
+        temp = UI.createLabel(buttonText, "fonts/font3.fnt", fontSize or 14, setting)
+        screen.autoSuitable(temp, {nodeAnchor=General.anchorCenter, x=size.width/2, y=size.height*7/30})
         but:addChild(temp)
     end
     
@@ -104,12 +110,13 @@ function UI.createMenuButton(size, buttonBg, callback, callbackParam, buttonImag
 end
 
 function UI.createGuidePointer(angle)
-    --local bg = CCNode:create()
+    local bg = CCNode:create()
     local pt = UI.createSpriteWithFile("images/guidePointer.png")
     pt:setAnchorPoint(General.anchorBottom)
-    
-    pt:setRotation(angle)
-    return pt
+    pt:runAction(Action.createVibration(getParam("actionTimePointer",250)/1000, 0, getParam("actionOffyPointer", 20)))
+    bg:addChild(pt)
+    bg:setRotation(angle)
+    return bg
 end
 
 function UI.setShowAnimate(bg)
@@ -117,4 +124,35 @@ function UI.setShowAnimate(bg)
     bg:setScaleX(0.5 * sx)
     bg:setScaleY(0.5 * sy)
     bg:runAction(CCEaseBackOut:create(CCScaleTo:create(0.25, sx, sy)))
+end
+
+function UI.closeVisitControl(bg)
+    local child = bg:getChildByTag(TAG_VISIT)
+    if child then
+        child:removeFromParentAndCleanup(true)
+    end
+end
+
+function UI.showVisitControl(param)
+    local bg = param.bg
+    UI.closeVisitControl(bg)
+    local s = param.icon:getContentSize()
+    local p1 = param.icon:convertToWorldSpace(CCPointMake(s.width/2, s.height/2))
+    local p2 = bg:convertToNodeSpace(p1)
+    
+    local visitBg = UI.createSpriteWithFile("images/visitBg.png")
+    visitBg:setAnchorPoint(CCPointMake(0, 140/274))
+    visitBg:setPosition(p2.x, squeeze(p2.y, 140, bg:getContentSize().height-134))
+    bg:addChild(visitBg, 100, TAG_VISIT)
+    
+    temp = UI.createButton(CCSizeMake(128, 58), EventManager.sendMessageCallback, {callbackParam={event="EVENT_VISIT_USER", eventParam=param.uid}, image="images/buttonGreen.png", text=StringManager.getString("Visit"), fontSize=25, fontName="fonts/font3.fnt"})
+    screen.autoSuitable(temp, {x=108, y=215, nodeAnchor=General.anchorCenter})
+    visitBg:addChild(temp)
+end
+
+function UI.registerVisitIcon(cell, scrollView, dialogBack, visitUid, visitIcon)
+    local item = {bg=dialogBack, icon=visitIcon or cell, uid=visitUid}
+    scrollView:addChildTouchNode(cell, UI.showVisitControl, item, {nodeChangeHandler=doNothing})
+    scrollView.moveCallback = UI.closeVisitControl
+    scrollView.moveCallbackDelegate = dialogBack
 end

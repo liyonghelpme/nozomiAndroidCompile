@@ -117,28 +117,24 @@ do
 		callTable.accNode[2] = temp
 		callTable.accEnable = true
 		
-		if callTable.pt then
-			callTable.pt:setRotation(-90)
-			callTable.pt:setPosition(550, 357)
-			--GuideLogic.pt:retain()
-			--GuideLogic.pt:removeFromParentAndCleanup(false)
-			--bg:addChild(
-		end
-		
 		temp = UI.createSpriteWithFile("images/crystal.png",CCSizeMake(34, 33))
 		screen.autoSuitable(temp, {x=70, y=5})
 		callTable.accNode[2]:addChild(temp)
-		temp = UI.createLabel("5", "fonts/font3.fnt", 25, {colorR = 255, colorG = 255, colorB = 255})
+		
+		local accTime = math.ceil(barrack:getTotalTime())
+		local cost = CrystalLogic.computeCostByTime(accTime)
+		temp = UI.createLabel(tostring(cost), "fonts/font3.fnt", 25, {colorR = 255, colorG = 255, colorB = 255})
 		screen.autoSuitable(temp, {x=44, y=20, nodeAnchor=General.anchorCenter})
 		callTable.accNode[2]:addChild(temp)
 		callTable.accNode[7] = temp
+		--callTable.accCost = cost
 		
 		if barrack.totalSpace+SoldierLogic.getCurSpace()>SoldierLogic.getSpaceMax() then
 			callTable.accNode[2]:setSatOffset(-100)
 			callTable.accEnable = false
 		end
 		
-		temp = UI.createLabel(StringManager.getTimeString(math.ceil(barrack:getTotalTime())), "fonts/font3.fnt", 19, {colorR = 255, colorG = 255, colorB = 255})
+		temp = UI.createLabel(StringManager.getTimeString(accTime), "fonts/font3.fnt", 19, {colorR = 255, colorG = 255, colorB = 255})
 		screen.autoSuitable(temp, {x=608, y=413, nodeAnchor=General.anchorCenter})
 		bg:addChild(temp)
 		callTable.accNode[3] = temp
@@ -175,8 +171,8 @@ do
 			display.pushNotice(UI.createNotice(StringManager.getFormatString("needLevel", {level=sid, name=StringManager.getString("dataBuildName1001")})))
 		else
 			local food = StaticData.getSoldierData(sid, UserData.researchLevel[sid] or 1).cost
-			if ResourceLogic.checkAndCost({costType="food", costValue=food}) then
-				param.barrack:callSoldier(sid)
+			if ResourceLogic.getResource("food")>food and param.barrack:callSoldier(sid) then
+				ResourceLogic.changeResource("food", -food)
 			end
 		end
 	end
@@ -286,7 +282,9 @@ do
 					end
 				elseif not callTable.pause and callTable.accNode then
 					callTable.accNode[1]:setString(StringManager.getFormatString("trainingTroop", {num=SoldierLogic.getTrainingSpace()+SoldierLogic.getCurSpace(), max=SoldierLogic.getSpaceMax()}))
-					callTable.accNode[3]:setString(StringManager.getTimeString(math.ceil(barrack:getTotalTime())))
+					local accTime = math.ceil(barrack:getTotalTime())
+					callTable.accNode[3]:setString(StringManager.getTimeString(accTime))
+					callTable.accNode[7]:setString(tostring(CrystalLogic.computeCostByTime(accTime)))
 					
 					local singleTime = barrack:getSingleTime()
 					local singleTotalTime = callList[1].perTime
@@ -340,6 +338,10 @@ do
 							queueItem.num = callList[qIndex].num
 							queueItem.num1:setString(queueItem.num .. "x")
 							queueItem.num2:setString(queueItem.num .. "x")
+							if callTable.pt and queueItem.num==20 then
+                    			callTable.pt:setRotation(-90)
+                    			callTable.pt:setPosition(550, 357)
+							end
 						end
 					elseif callTable.queue[i] then
 						callTable.queue[i].view:removeFromParentAndCleanup(true)
@@ -410,16 +412,13 @@ do
 				costItems[i] = item
 			end
 		end
-		if not GuideLogic.complete then
-			local setting = GuideLogic.pointerSetting
-			if setting and setting[1]=="build" and setting[2]==1001 then
-				local pt = UI.createGuidePointer(0)
-				local x, y = soldierButtons[1]:getPosition()
-				pt:setScale(0.5)
-				pt:setPosition(x, y+60)
-				bg:addChild(pt)
-				callTable.pt = pt
-			end
+		if GuideLogic.isTrainGuide then
+		    GuideLogic.isTrainGuide = nil
+			local pt = UI.createGuidePointer(0)
+			local x, y = soldierButtons[1]:getPosition()
+			pt:setPosition(x, y+60)
+			bg:addChild(pt)
+			callTable.pt = pt
 		end
 		updateCallList()
 	end

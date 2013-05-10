@@ -53,6 +53,6 @@ function Wizard:executeAttack()
 	p[3] = self.scene.SIZEY - p[2]+setting[3]
 	p[1] = p[1] + self.viewInfo.x + setting[1]
 	p[2] = p[2] + self.viewInfo.y + setting[2]
-	local shot = MagicSplash.new(self.stateInfo.attackValue, 180, p[1], p[2], nil, nil, 0, GroupTypes.Attack, 1, self.attackTarget)
+	local shot = MagicSplash.new(self.stateInfo.attackValue, 180, p[1], p[2], nil, nil, 0, GroupTypes.Attack, 1, math.ceil(self.data.level/2), self.attackTarget)
 	shot:addToScene(self.scene)
 end

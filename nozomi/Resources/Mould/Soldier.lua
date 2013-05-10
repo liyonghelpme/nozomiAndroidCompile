@@ -12,6 +12,8 @@ SoldierHelper.featurePos = {[1]={x=-53, y=122}, [2]={x=0, y=124}, [3]={x=47, y=1
 SoldierHelper.moveAction = {[1]={t=1, m=10}, [2]={t=1, m=10}, [3]={t=0.3, m=3}, [4]={t=1.1, m=11}, [5]={t=0.7, m=7},
 							[6]={t=1, m=1}, [7]={t=1, m=10}, [8]={t=1.5, m=15}, [9]={t=1, m=1}, [10]={t=1, m=10}}
 
+SoldierHelper.shadowScale = {[2]=0.59, [3]=1.14, [4]=1.14, [6]=1.86, [8]=0.64, [9]=2.09, [10]=1.14}
+
 function SoldierHelper.addSoldierHead(bg, sid, scale)
 	local head = UI.createSpriteWithFile("images/soldierHead" .. sid .. ".png")
 	local p=copyData(SoldierHelper.headPos[sid])
@@ -37,7 +39,7 @@ function Soldier:ctor(sid, setting)
 	local level = params.level or 1
 	self.data = StaticData.getSoldierData(sid, level)
 	self.hitpoints = self.data.hitpoints
-	
+	self.shadowScale = SoldierHelper.shadowScale[sid] or 0.68
 	local scale = getParam("soldierScale" .. sid, 100)/100
 	if sinfo.sid==1 then
 		self.viewInfo = {scale=scale, x=0, y=17.5*scale}
@@ -265,9 +267,9 @@ function Soldier:searchAttack()
             self.setFromToGrid({0, 0, 1}, self.truePath[1])
             self:setPathCount()
 
-            print("self path Data")
-            print(simpJson:encode(self.gridPath))
-            print(simpJson:encode(self.truePath))
+            --print("self path Data")
+            --print(simpJson:encode(self.gridPath))
+            --print(simpJson:encode(self.truePath))
             w:showGrid()
 
         end	

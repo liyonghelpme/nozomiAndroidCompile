@@ -42,15 +42,6 @@ function Balloon:executeAttack()
 	shot:addToScene(self.scene)
 end
 
-function Balloon:addShadow()
-	local temp = UI.createSpriteWithFile("images/personShadow.png")
-	temp:setScale(1)
-	temp:setOpacity(80)
-	screen.autoSuitable(temp, {nodeAnchor=General.anchorCenter})
-	self.view:addChild(temp)
-end
-
-
 local FLAME_ACTION = {[1]={{-32, 37, -120, -1}},
 	[2]={{-65, -1, -180, -1}},
 	[3]={{-35, -47, 120, 1}},
@@ -61,10 +52,11 @@ local FLAME_ACTION = {[1]={{-32, 37, -120, -1}},
 function Balloon:onChange(dir, i)
 	local setting = FLAME_ACTION[dir][1]
 	if not self.flame then
-		self.flame = UI.createAnimateWithSpritesheet(getParam("flameActionTime", 1000)/1000, "flame_", 19, {plist="animate/builder/flame.plist"})
+		self.flame = UI.createAnimateWithSpritesheet(getParam("flameActionTime", 1000)/1000, "flame_", 19, {plist="animate/builder/flame.plist", useExtend=true})
 		screen.autoSuitable(self.flame, {nodeAnchor=General.anchorTop})
 		self.flame:setScaleX(0.8)
 		self.flame:setScaleY(0.4)
+		self.flame:setHueOffset(170)
 		self.view:addChild(self.flame, setting[4])
 	else
 		self.flame:retain()

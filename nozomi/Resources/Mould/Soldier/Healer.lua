@@ -66,14 +66,6 @@ function Healer:executeAttack()
 	shot:addToScene(self.scene)
 end
 
-function Healer:addShadow()
-	local temp = UI.createSpriteWithFile("images/personShadow.png")
-	temp:setScale(0.3)
-	temp:setOpacity(80)
-	screen.autoSuitable(temp, {nodeAnchor=General.anchorCenter})
-	self.view:addChild(temp)
-end
-
 function Healer:updateState(diff)
 	if self.isFighting then
 		if BattleLogic.battleEnd then

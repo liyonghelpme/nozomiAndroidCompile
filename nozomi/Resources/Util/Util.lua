@@ -50,14 +50,22 @@ function delayCallback(delay, callback, params)
 	entryId = CCDirector:sharedDirector():getScheduler():scheduleScriptFunc(callOnce, delay, false)
 end
 
+function removeSelf(node)
+    node:removeFromParentAndCleanup(true)
+end
+
 -- 延时删除节点，主要用于某些显示之后不需要维持其存在，但仍需要动画完毕后才进行的自动删除
 function delayRemove(delay, node)
-	node:retain()
-	local function removeAndRelease()
-		node:removeFromParentAndCleanup(true)
-		node:release()
-	end
-	delayCallback(delay, removeAndRelease)
+	--node:retain()
+	--local function removeAndRelease()
+	--	node:removeFromParentAndCleanup(true)
+	--	node:release()
+	--end
+	--delayCallback(delay, removeAndRelease)
+	local array = CCArray:create()
+	array:addObject(CCDelayTime:create(delay))
+	array:addObject(CCCallFuncN:create(removeSelf))
+	node:runAction(CCSequence:create(array))
 end
 
 -- 啥都不做的空方法
@@ -244,6 +252,7 @@ require "Util.Class"
 require "Util.character"
 require "Util.json"
 require "Util.queue"
+require "Util.Random"
 require "Util.Action"
 require "Util.MapGrid"
 require "Util.RhombGrid"

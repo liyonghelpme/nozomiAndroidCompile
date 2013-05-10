@@ -4,12 +4,29 @@ function MapGridView:ctor()
 	self.buildings = {}
 	self.blocks = {}
 	self.lines = {}
-	
+	self.color = ccc3(255, 255, 255)
 	self.view = CCNode:create()
 	self.blockBatch = CCSpriteBatchNode:create("block.png", 2000)
 	self.view:addChild(self.blockBatch)
 	self.linesBatch = CCSpriteBatchNode:create("line.png", 2000)
 	self.view:addChild(self.linesBatch)
+	
+    --local blend = ccBlendFunc:new()
+    --blend.src = 0x0306
+    --blend.dst = 1
+    --blend.src = 0
+    --blend.dst = 1
+    --self.linesBatch:setBlendFunc(blend)
+end
+
+function MapGridView:setColor(color)
+    self.color = color
+    for _, line in pairs(self.lines) do
+        line:setColor(color)
+    end
+    for _, block in pairs(self.blocks) do
+        block:setColor(color)
+    end
 end
 
 function MapGridView:getLineKey(x, y, edgeId)
@@ -34,7 +51,8 @@ function MapGridView:addLine(edgeId)
 	local x, y = math.floor(blockId/10000), blockId%10000
 	local aposition = self:convertToPosition(x+1, y+1)
 	local position = self:convertToPosition(x+1-edge, y+edge)
-	local line = UI.createSpriteWithFile("line.png", CCSizeMake(self.sizeX/2+4, self.sizeY/2+1))
+	local line = UI.createSpriteWithFile("line.png", CCSizeMake(self.sizeX/2+10, self.sizeY/2+7))
+	line:setColor(self.color)
 	screen.autoSuitable(line, {nodeAnchor=General.anchorCenter, x=(aposition[1]+position[1])/2, y=(aposition[2]+position[2])/2})
 	if edge==1 then
 		line:setFlipX(true)
@@ -58,6 +76,7 @@ end
 function MapGridView:addBlock(x, y)
 	local blockKey = self:getGridKey(x, y)
 	local sprite = UI.createSpriteWithFile("block.png", CCSizeMake(self.sizeX+2, self.sizeY+2))
+	sprite:setColor(self.color)
 	local position = self:convertToPosition(x, y)
 	screen.autoSuitable(sprite, {nodeAnchor=General.anchorBottom, x=position[1], y=position[2]-1})
 	self.blockBatch:addChild(sprite)
@@ -75,9 +94,10 @@ function MapGridView:removeBlock(x, y)
 	self:resetBlockEdge(x, y)
 end
 
-function MapGridView:setGridUse(key, gx, gy, gsize)
-	for i=1, gsize do
-		for j=1, gsize do
+function MapGridView:setGridUse(key, gx, gy, gsizex, gsizey)
+    gsizey = gsizey or gsizex
+	for i=1, gsizex do
+		for j=1, gsizey do
 			local x, y = gx+i-1, gy+j-1
 			local grid = self:getGrid(key, x, y)
 			if grid then
@@ -92,9 +112,10 @@ function MapGridView:setGridUse(key, gx, gy, gsize)
 	end
 end
 
-function MapGridView:clearGridUse(key, gx, gy, gsize)
-	for i=1, gsize do
-		for j=1, gsize do
+function MapGridView:clearGridUse(key, gx, gy, gsizex, gsizey)
+    gsizey = gsizey or gsizex
+	for i=1, gsizex do
+		for j=1, gsizey do
 			local x, y = gx+i-1, gy+j-1
 			local grid = self:getGrid(key, x, y)
 			grid.value = grid.value - 1

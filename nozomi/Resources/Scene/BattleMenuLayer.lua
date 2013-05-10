@@ -17,7 +17,7 @@ local function updateBattleCell(bg, scrollView, item)
 		screen.autoSuitable(temp, {x=0, y=0})
 		bg:addChild(temp)
 		SoldierHelper.addSoldierHead(bg, item.id, 0.7)
-		temp = UI.createLabel("x" .. item.num, "fonts/font3.fnt", 18, {colorR = 255, colorG = 255, colorB = 255, lineOffset=12})
+		temp = UI.createLabel("x" .. item.num, "fonts/font3.fnt", 18, {colorR = 255, colorG = 255, colorB = 255, lineOffset=-12})
 		screen.autoSuitable(temp, {x=40, y=90, nodeAnchor=General.anchorCenter})
 		bg:addChild(temp)
 		
@@ -53,17 +53,17 @@ function BattleMenuLayer:initTips()
 	local nextCost = NEXT_COST[UserData.level]
 	local temp, bg = nil
 	bg = CCNode:create()
-	temp = UI.createButton(CCSizeMake(187, 84), self.nextBattleScene, {callbackParam=self, image="images/buttonOrange.png", priority=display.MENU_BUTTON_PRI})
+	temp = UI.createButton(CCSizeMake(187, 84), self.nextBattleScene, {callbackParam=self, image="images/buttonOrangeB.png", priority=display.MENU_BUTTON_PRI})
 	screen.autoSuitable(temp, {x=903, y=205, nodeAnchor=General.anchorCenter})
 	bg:addChild(temp)
 	
-	local temp1 = UI.createLabel(StringManager.getString("buttonNext"), "fonts/font3.fnt", 25, {colorR = 255, colorG = 255, colorB = 255, lineOffset=12})
+	local temp1 = UI.createLabel(StringManager.getString("buttonNext"), "fonts/font3.fnt", 25, {colorR = 255, colorG = 255, colorB = 255, lineOffset=-12})
 	screen.autoSuitable(temp1, {x=151, y=52, nodeAnchor=General.anchorRight})
 	temp:addChild(temp1)
 	temp1 = UI.createSpriteWithFile("images/oil.png",CCSizeMake(20, 24))
 	screen.autoSuitable(temp1, {x=143, y=8})
 	temp:addChild(temp1)
-	temp1 = UI.createLabel(tostring(nextCost), "fonts/font3.fnt", 20, {colorR = 255, colorG = 255, colorB = 255, lineOffset=12})
+	temp1 = UI.createLabel(tostring(nextCost), "fonts/font3.fnt", 20, {colorR = 255, colorG = 255, colorB = 255, lineOffset=-12})
 	screen.autoSuitable(temp1, {x=137, y=19, nodeAnchor=General.anchorRight})
 	temp:addChild(temp1)
 	temp1 = UI.createSpriteWithFile("images/findEnemyIcon.png",CCSizeMake(76, 53))
@@ -144,7 +144,7 @@ function BattleMenuLayer:initLeftTop()
 	self.view:addChild(bg)
 	
 	self.stolenResources = {}
-	temp = UI.createLabel("0", "fonts/font3.fnt", 20, {colorR = 255, colorG = 255, colorB = 255, lineOffset=12})
+	temp = UI.createLabel("0", "fonts/font3.fnt", 20, {colorR = 255, colorG = 255, colorB = 255, lineOffset=-12})
 	screen.autoSuitable(temp, {x=70, y=133, nodeAnchor=General.anchorLeft})
 	bg:addChild(temp)
 	self.stolenResources["oil"] = {resource=0, label=temp}
@@ -157,7 +157,7 @@ function BattleMenuLayer:initLeftTop()
 	temp = UI.createSpriteWithFile("images/score.png",CCSizeMake(29, 35))
 	screen.autoSuitable(temp, {x=35, y=80})
 	bg:addChild(temp)
-	temp = UI.createLabel(tostring(BattleLogic.scores[1]), "fonts/font3.fnt", 20, {colorR = 255, colorG = 255, colorB = 255, lineOffset=12})
+	temp = UI.createLabel(tostring(BattleLogic.scores[1]), "fonts/font3.fnt", 20, {colorR = 255, colorG = 255, colorB = 255, lineOffset=-12})
 	screen.autoSuitable(temp, {x=71, y=98, nodeAnchor=General.anchorLeft})
 	bg:addChild(temp)
 	temp = UI.createSpriteWithFile("images/exp.png",CCSizeMake(53, 51))
@@ -169,20 +169,20 @@ function BattleMenuLayer:initLeftTop()
 	temp = UI.createLabel(StringManager.getString("labelDefeat"), "fonts/font2.fnt", 13, {colorR = 255, colorG = 255, colorB = 255})
 	screen.autoSuitable(temp, {x=71, y=64, nodeAnchor=General.anchorLeft})
 	bg:addChild(temp)
-	temp = UI.createLabel(tostring(enemyLevel), "fonts/font3.fnt", 22, {colorR = 255, colorG = 255, colorB = 255, lineOffset=12})
+	temp = UI.createLabel(tostring(enemyLevel), "fonts/font3.fnt", 22, {colorR = 255, colorG = 255, colorB = 255, lineOffset=-12})
 	screen.autoSuitable(temp, {x=43, y=220, nodeAnchor=General.anchorCenter})
 	bg:addChild(temp)
-	temp = UI.createLabel("0", "fonts/font3.fnt", 20, {colorR = 255, colorG = 255, colorB = 255, lineOffset=12})
+	temp = UI.createLabel("0", "fonts/font3.fnt", 20, {colorR = 255, colorG = 255, colorB = 255, lineOffset=-12})
 	screen.autoSuitable(temp, {x=71, y=166, nodeAnchor=General.anchorLeft})
 	bg:addChild(temp)
 	self.stolenResources["food"] = {resource=0, label=temp}
-	temp = UI.createLabel(tostring(BattleLogic.scores[2]), "fonts/font3.fnt", 20, {colorR = 255, colorG = 190, colorB = 189, lineOffset=12})
+	temp = UI.createLabel(tostring(BattleLogic.scores[2]), "fonts/font3.fnt", 20, {colorR = 255, colorG = 190, colorB = 189, lineOffset=-12})
 	screen.autoSuitable(temp, {x=71, y=42, nodeAnchor=General.anchorLeft})
 	bg:addChild(temp)
 	temp = UI.createSpriteWithFile("images/score.png",CCSizeMake(29, 35))
 	screen.autoSuitable(temp, {x=36, y=24})
 	bg:addChild(temp)
-	temp = UI.createLabel(enemyName, "fonts/font3.fnt", 22, {colorR = 255, colorG = 255, colorB = 231, lineOffset=12})
+	temp = UI.createLabel(enemyName, "fonts/font3.fnt", 22, {colorR = 255, colorG = 255, colorB = 231, lineOffset=-12})
 	screen.autoSuitable(temp, {x=71, y=221, nodeAnchor=General.anchorLeft})
 	bg:addChild(temp)
 end
@@ -209,13 +209,14 @@ function BattleMenuLayer:initBottom()
 	self.stars = stars
 	self.starsNum = 0
 	
-	temp = UI.createLabel("0%", "fonts/font3.fnt", 30, {colorR = 255, colorG = 255, colorB = 255, lineOffset=12})
+	temp = UI.createLabel("0%", "fonts/font3.fnt", 30, {colorR = 255, colorG = 255, colorB = 255, lineOffset=-12})
 	screen.autoSuitable(temp, {x=106, y=181, nodeAnchor=General.anchorCenter})
 	bg:addChild(temp)
 	self.percent = 0
 	self.percentLabel = temp
+	self.shieldHour = 0
 	
-	temp = UI.createLabel(StringManager.getString("damagePercent"), "fonts/font3.fnt", 16, {colorR = 255, colorG = 255, colorB = 255, lineOffset=12})
+	temp = UI.createLabel(StringManager.getString("damagePercent"), "fonts/font3.fnt", 16, {colorR = 255, colorG = 255, colorB = 255, lineOffset=-12})
 	screen.autoSuitable(temp, {x=108, y=234, nodeAnchor=General.anchorCenter})
 	bg:addChild(temp)
 	
@@ -224,13 +225,13 @@ function BattleMenuLayer:initBottom()
 	bg:addChild(temp)
 	
 	local items = {}
-	local soldiers = {20, 20, 20, 20, 20, 20, 20, 20, 20, 20}
-	--FightLogic.getSoldiers()
-	for i=1, 10 do
-		if soldiers[i]>0 then
-			table.insert(items, {id=i, num=soldiers[i], type="soldier", delegate=self})
-		end
-	end
+    for i=1, 10 do
+        local num = SoldierLogic.getSoldierNumber(i) or 0
+        if num>0 then
+            --SoldierLogic.getSoldierNumber(i)
+			table.insert(items, {id=i, num=num, level=UserData.researchLevel[i], type="soldier", delegate=self})
+        end
+    end
 	local length = #items
 	local movable = false
 	if length<11 then
@@ -270,8 +271,11 @@ end
 
 function BattleMenuLayer:nextBattleScene()
 	-- TODO
-	Action.test(true)
-	delayCallback(1, display.runScene, PreBattleScene)
+	local cost = NEXT_COST[UserData.level]
+	if ResourceLogic.checkAndCost({costType="oil", costValue=cost}) then
+    	Action.test(true)
+    	delayCallback(getParam("actionTimeChangeScene", 600)/1000, display.runScene, PreBattleScene)
+    end
 end
 
 function BattleMenuLayer:endBattle(forceEnd)
@@ -283,8 +287,7 @@ function BattleMenuLayer:endBattle(forceEnd)
 		end
 	else
 		UI.testChangeScene(true)
-		delayCallback(1, display.popScene)
-		delayCallback(1, UI.testChangeScene)
+		delayCallback(getParam("actionTimeChangeScene", 600)/1000, display.popScene)
 		--display.popScene()
 		--UI.testChangeScene()
 	end
@@ -296,6 +299,19 @@ function BattleMenuLayer:beginBattle()
 	if self.tipsNode then
 		self.tipsNode:removeFromParentAndCleanup(true)
 		self.tipsNode = nil
+        for i, build in pairs(self.scene.builds) do
+            if build.npcViews then
+                for _, npc in ipairs(build.npcViews) do
+                    if not npc.deleted then
+                        npc:runBackHome()
+                    end
+                end
+            end
+        end
+        local areaAlpha = getParam("buildingAreaAlpha", 38)
+        local lineAlpha = getParam("buildingLineAlpha", 100)
+        self.scene.mapGridView.blockBatch:runAction(CCAlphaTo:create(0.5, areaAlpha, 0))
+        self.scene.mapGridView.linesBatch:runAction(CCAlphaTo:create(0.5, lineAlpha, 0))
 	end
 	self.timeTypeLabel:setString(StringManager.getString("labelBattleEndIn"))
 				
@@ -317,26 +333,35 @@ function BattleMenuLayer:executeSelectItem(touchPoint)
 			display.pushNotice(UI.createNotice(StringManager.getString("noticeSelectItemEmpty")))
 			return false
 		end
-		item.num = item.num-1
-		if item.num==0 then
-			print("test")
-			item.view:setSatOffset(-100)
-		end
 		if item.type=="soldier" then
 			local p = self.scene.ground:convertToNodeSpace(CCPointMake(touchPoint[1], touchPoint[2]))
-			local soldier = SoldierHelper.create(item.id, {isFighting=true})
-			BattleLogic.id = (BattleLogic.id or 0)+1
-			soldier.id = BattleLogic.id
-			soldier:addToScene(self.scene, {p.x, p.y})
-			table.insert(self.scene.soldiers, soldier)
-			if not self.battleBegin then
-				self:beginBattle()
-			end
-			self.troopsCost = true
-			self.replayFile:write(json.encode({timer.getTime()-self.beginTime, "s", item.id, p.x, p.y}) .. "\n")
-			item.numLabel:setString("x" .. item.num)
-			return true
+			local grid = self.scene.mapGridView:convertToGrid(p.x, p.y)
+			if self.scene.mapGridView:checkGridEmpty(GridKeys.Build, grid.gridPosX, grid.gridPosY, 1) then
+    			local soldier = SoldierHelper.create(item.id, {isFighting=true, level=item.level})
+    			BattleLogic.id = (BattleLogic.id or 0)+1
+    			soldier.id = BattleLogic.id
+    			soldier:addToScene(self.scene, {p.x, p.y})
+    			table.insert(self.scene.soldiers, soldier)
+    			if not self.battleBegin then
+    				self:beginBattle()
+    			end
+    			self.troopsCost = true
+    			self.replayFile:write(json.encode({timer.getTime()-self.beginTime, "s", item.id, p.x, p.y}) .. "\n")
+    			BattleLogic.incSoldier(item.id)
+    		else
+			    display.pushNotice(UI.createNotice(StringManager.getString("noticeAreaError")))
+			    if self.battleBegin then
+        		    self.scene:showBuildingArea()
+        		end
+    		    return false
+    		end
 		end
+		item.num = item.num-1
+    	item.numLabel:setString("x" .. item.num)
+		if item.num==0 then
+			item.view:setSatOffset(-100)
+		end
+		return true
 	end
 end
 
@@ -359,6 +384,11 @@ function BattleMenuLayer:update(diff)
 	if self.percent ~= BattleLogic.percent then
 		self.percent = BattleLogic.percent
 		self.percentLabel:setString(self.percent .. "%")
+	end
+	if self.shieldHour ~= BattleLogic.shieldHour then
+	    print("test")
+	    self.shieldHour = BattleLogic.shieldHour
+	    display.pushNotice(UI.createNotice(StringManager.getFormatString("noticeBattleShieldTime", {hour=self.shieldHour}), 255))
 	end
 	if self.time then
 		self.time = self.time - diff
@@ -452,6 +482,7 @@ function BattleMenuLayer:updateOthers()
 		self.battleEnd = true
 		self.replayFile:write(json.encode({timer.getTime() - self.beginTime, "e"}) .. "\n")
 		self.replayFile:close()
+		self.view:removeFromParentAndCleanup(true)
 		display.showDialog(BattleResultDialog.new(BattleLogic.getBattleResult()))
 	end
 end

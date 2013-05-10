@@ -58,6 +58,8 @@ do
 		end
 	end
 	EventManager.sendMessage = sendMessage
+	-- 同样采用通知技术来进行C++对LUA的通讯
+	CCNotificationCenter:sharedNotificationCenter():registerScriptObserver(sendMessage)
 	function EventManager.sendMessageCallback(param)
 		sendMessage(param.event, param.eventParam)
 	end

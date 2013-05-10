@@ -16,6 +16,12 @@ function NPC:ctor(sid, home)
 	self.viewInfo = {scale=scale, x=0, y=16*scale}
 	self.moveTimes = 0
 	self.plistFile = "animate/npc/npc" .. sid .. ".plist"
+	
+	if self.info.sid<2 or self.info.sid==4 then
+    	self.shadowScale = 0.5
+    else
+    	self.shadowScale = 0.55
+    end
 end
 	
 function NPC:resetFreeState()
@@ -71,6 +77,25 @@ function NPC:setPose()
 	end
 end
 	
+function NPC:getInitPos()
+	local targetBuild
+	local ri = math.random(#(self.scene.builds))
+	for i, build in pairs(self.scene.builds) do
+		if i==ri then
+			targetBuild = build
+			break
+		end
+	end
+	if not targetBuild then
+		targetBuild = self.home
+	end
+	self.target = targetBuild
+	self:setPose()
+	local x, y = targetBuild.buildView.view:getPosition()
+    local off = targetBuild:getDoorPosition()
+	return {x + off[1], y + off[2]}
+end
+
 function NPC:randomMove()
 	local randPercent = 0.7
 	if self.moveTimes == 0 then
@@ -89,7 +114,7 @@ function NPC:randomMove()
 		targetBuild = self.home
 		self.isOver = true
 	end
-	if targetBuild == self.target or not targetBuild or targetBuild.deleted then
+	if targetBuild == self.target or not targetBuild or targetBuild.deleted or targetBuild.buildData.bid==3006 then
 		self:setPose()
 	else
 		self.target = targetBuild
@@ -98,6 +123,14 @@ function NPC:randomMove()
 		self:setMoveTarget(x + off[1], y + off[2])
 		self.moveTimes = self.moveTimes+1
 	end
+end
+
+function NPC:runBackHome()
+    local x, y = self.home.buildView.view:getPosition()
+	local off = self.home:getDoorPosition()
+	self:setMoveScale(1+24/self.info.moveSpeed)
+	self.isOver = true
+	self:setMoveTarget(x + off[1], y+off[2])
 end
 	
 function NPC:updateState(diff)
@@ -119,11 +152,4 @@ function NPC:updateState(diff)
 		self:resetPersonView()
 		return true
 	end
-end
-
-function NPC:addShadow()
-	local temp = UI.createSpriteWithFile("images/personShadow.png")
-	temp:setScale(0.25)
-	screen.autoSuitable(temp, {nodeAnchor=General.anchorCenter})
-	self.view:addChild(temp)
 end

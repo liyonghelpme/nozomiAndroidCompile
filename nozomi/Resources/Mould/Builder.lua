@@ -14,11 +14,12 @@ local YOFF=5
 Builder = class(Person)
 
 function Builder:ctor()
-	local sinfo = {moveSpeed=20, unitType=2}
+	local sinfo = {moveSpeed=40, unitType=2}
 	self:initWithInfo(sinfo)
 	
 	self.viewInfo = {scale=1, x=0, y=35}
 	self.plistFile = "animate/builder/builder.plist"
+	self.shadowScale = 0.64
 end
 
 function Builder:updateState()
@@ -146,12 +147,4 @@ function Builder:resetOtherState()
 		self.displayState.num = 5
 		self.displayState.prefix = "builder_a"
 	end
-end
-
-function Builder:addShadow()
-	local temp = UI.createSpriteWithFile("images/personShadow.png")
-	temp:setScale(0.4)
-	temp:setOpacity(160)
-	screen.autoSuitable(temp, {nodeAnchor=General.anchorCenter})
-	self.view:addChild(temp, -2)
 end

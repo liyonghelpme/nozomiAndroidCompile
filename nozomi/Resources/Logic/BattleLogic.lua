@@ -7,14 +7,20 @@ function BattleLogic.init()
 	BattleLogic.buildDestroyed = 0
 	BattleLogic.builds = {}
 	BattleLogic.destroys = {}
+	BattleLogic.costTraps = {}
+	BattleLogic.soldiers = {0,0,0,0,0,0,0,0,0,0}
 	BattleLogic.battleEnd = false
 	BattleLogic.resources["food"].left = 0
 	BattleLogic.resources["oil"].left = 0
+	BattleLogic.shieldHour = 0
 end
 
-function BattleLogic.addBuild(gridId, buildData)
+function BattleLogic.incSoldier(sid)
+    BattleLogic.soldiers[sid] = BattleLogic.soldiers[sid]+1
+end
+
+function BattleLogic.addBuild(id, buildData)
 	BattleLogic.buildMax = BattleLogic.buildMax + 1
-	BattleLogic.builds[gridId] = buildData
 	local resources = buildData.resources
 	if resources then
 		for type, resource in pairs(resources) do
@@ -22,11 +28,12 @@ function BattleLogic.addBuild(gridId, buildData)
 				BattleLogic.resources[type].left = BattleLogic.resources[type].left + resource
 			end
 		end
+	    BattleLogic.builds[id] = buildData
 	end
 end
 
-function BattleLogic.setBuildHitpoints(gridId, hitpoints)
-	local buildData = BattleLogic.builds[gridId]
+function BattleLogic.setBuildHitpoints(id, hitpoints)
+	local buildData = BattleLogic.builds[id]
 	if not buildData then return end
 	local resources = buildData.resources
 	if resources then
@@ -41,6 +48,10 @@ function BattleLogic.setBuildHitpoints(gridId, hitpoints)
 	buildData.hitpoints = hitpoints
 end
 
+function BattleLogic.costTrap(id)
+    table.insert(BattleLogic.costTraps, id)
+end
+
 function BattleLogic.destroyBuild(bid)
 	BattleLogic.destroys[bid] = (BattleLogic.destroys[bid] or 0) + 1
 	if bid==TOWN_BID then
@@ -48,9 +59,19 @@ function BattleLogic.destroyBuild(bid)
 	end
 	BattleLogic.buildDestroyed = BattleLogic.buildDestroyed + 1
 	local percent = math.floor(BattleLogic.buildDestroyed*100/BattleLogic.buildMax)
+	
+	if percent>=40 and BattleLogic.percent<40 then
+	    print("test2")
+		BattleLogic.shieldHour = 12
+	end
 	if percent>=50 and BattleLogic.percent<50 then
 		BattleLogic.stars = BattleLogic.stars+1
-	elseif percent==100 then
+	end
+	if percent>=90 and BattleLogic.percent<90 then
+	    print("test2")
+		BattleLogic.shieldHour = 16
+	end
+	if percent==100 then
 		BattleLogic.stars = BattleLogic.stars+1
 		BattleLogic.battleEnd = true
 	end
@@ -70,6 +91,7 @@ function BattleLogic.getLeftResource(resourceType)
 end
 
 function BattleLogic.computeScore(enemyScore)
+    UserData.enemyScore = enemyScore
 	local dis = enemyScore - UserData.userScore
 	local isHigher = true
 	if dis<0 then
@@ -109,10 +131,9 @@ function BattleLogic.getBattleResult()
 	else
 		result.score = math.ceil(BattleLogic.scores[1]*BattleLogic.stars/3)
 	end
-	return result
-end
-
-function BattleLogic.getStageResult()
-	local result = {person=BattleLogic.resources["person"].stolen}
+	result.costTroops = BattleLogic.soldiers
+	result.costTraps = BattleLogic.costTraps
+	result.resourceBuilds = BattleLogic.builds
+	result.shieldTime = timer.getTime() + BattleLogic.shieldHour*3600
 	return result
 end

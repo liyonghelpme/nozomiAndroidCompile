@@ -98,7 +98,7 @@ end
 function Tomb:setViewState(build)
 	build:setScale(getParam("tombScale", 100)/100)
 	local ssize = self.view:getContentSize()
-	screen.autoSuitable(build, {x=getParam("tombOffx", 0)+ssize.width/2, y=getParam("TombOffy", 0), nodeAnchor=General.anchorBottom})		
+	screen.autoSuitable(build, {x=ssize.width/2, y=8, nodeAnchor=General.anchorBottom})		
 end
 
 function Tomb:removeView()

@@ -12,8 +12,21 @@ function Person:ctor()
 	self.displayState = {direction=1}
 	self.direction = 1
 	self.viewInfo = {scale=1, x=0, y=0}
+	self.moveScale = 1
+end
 
-    self.debug = false
+function Person:setMoveScale(scale)
+    local oldScale = self.moveScale
+    self.moveScale = scale
+    if self.state==PersonState.STATE_MOVING then
+        self.displayState.duration = self.displayState.duration*oldScale/scale
+        local stateInfo = self.stateInfo
+        -- local leftTime = stateInfo.moveTime-(self.stateTime - (stateInfo.beginTime or 0))
+        --if leftTime>0 and leftTime<stateInfo.moveTime then
+        --    stateInfo.moveTime = stateInfo.moveTime + leftTime*(oldScale/scale-1)
+        --end
+        self:moveDirect(stateInfo.toPoint[1], stateInfo.toPoint[2], true)
+    end
 end
 
 function Person:getMoveArroundPosition(build)
@@ -74,7 +87,7 @@ function Person:moveDirect(tx, ty, isInterupt)
 	else
 		stateInfo.beginTime = (stateInfo.beginTime or 0) + (stateInfo.moveTime or 0)
 	end
-	stateInfo.moveTime = self.scene.mapGrid:getGridDistance(ox, oy) * 10/self.info.moveSpeed
+	stateInfo.moveTime = self.scene.mapGrid:getGridDistance(ox, oy) * 10/(self.info.moveSpeed*self.moveScale)
 	self:changeDirection(ox, oy)
 	self:resetPersonView()
 end
@@ -159,6 +172,7 @@ function Person:resetPersonView()
 			self:resetFreeState()
 		elseif self.state == PersonState.STATE_MOVING then
 			self:resetMoveState()
+			self.displayState.duration = self.displayState.duration/self.moveScale
 		elseif self.state == PersonState.STATE_OTHER then
 			self:resetOtherState()
 		end
@@ -257,7 +271,7 @@ end
 --clearAllPath 清理所有的路径
 function Person:setFromToGrid(f, t)
     if f ~= nil and t ~= nil then
-        print("setFromToGrid"..f[3].." "..t[3])
+        --print("setFromToGrid"..f[3].." "..t[3])
         self.curGrid = f
         self.nextGrid = t
     end
@@ -270,7 +284,7 @@ function Person:clearPathCount(from, to)
     if self.gridPath ~= nil then
         local start = from[3]
         local finish = to[3]
-        print("clearPathCount "..start.." "..finish)
+        --print("clearPathCount "..start.." "..finish)
         for i = start, finish, 1 do
             if i <= #self.gridPath then
                 w:minusPathCount(self.gridPath[i][1], self.gridPath[i][2])
@@ -281,7 +295,7 @@ function Person:clearPathCount(from, to)
 end
 
 function Person:setPathCount() 
-    print("setPathCount")
+    --print("setPathCount")
     local w = self.scene.mapWorld
     --只设定最后一个位置的path count
     local l = #self.gridPath
@@ -296,7 +310,7 @@ function Person:setPathCount()
 end
 --清理所有的路径信息
 function Person:clearAllPath()
-    print("clearAllPath")
+    --print("clearAllPath")
     local w = self.scene.mapWorld
     if self.gridPath ~= nil then
         local l = #self.gridPath
@@ -314,7 +328,7 @@ function Person:clearAllPath()
     end
 end
 function Person:finishPath()
-    print("finishPath")
+    --print("finishPath")
     self.gridPath = nil
     self.truePath = nil
 end
@@ -391,7 +405,10 @@ end
 
 function Person:addShadow()
 	local temp = UI.createSpriteWithFile("images/personShadow.png")
-	temp:setScale(0.4)
+	temp:setScale(self.shadowScale or 0.68)
+	if self.info.unitType==2 then
+	    temp:setOpacity(230)
+	end
 	screen.autoSuitable(temp, {nodeAnchor=General.anchorCenter})
 	self.view:addChild(temp)
 end

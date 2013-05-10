@@ -40,10 +40,3 @@ function Mech:resetMoveState()
 	self.displayState.reverse = false
 	self.displayState.prefix = "soldier" .. self.info.sid .. "_" .. self.data.level .. "_m"
 end
-
-function Mech:addShadow()
-	local temp = UI.createSpriteWithFile("images/personShadow.png")
-	temp:setScale(0.6)
-	screen.autoSuitable(temp, {nodeAnchor=General.anchorCenter})
-	self.view:addChild(temp)
-end

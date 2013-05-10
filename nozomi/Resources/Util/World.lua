@@ -53,6 +53,7 @@ function World:ctor(cellNum, coff)
     --是否显示调试块
     self.debug = false
 end
+
 function World:setScene(s)
     self.scene = s
 end
@@ -141,7 +142,6 @@ function World:showGrid()
         end
     end
     self.scene.ground:addChild(self.calGrid, 10000)
-
 end
 function World:getKey(x, y)
     return x*self.coff+y

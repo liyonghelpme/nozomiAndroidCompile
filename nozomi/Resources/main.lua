@@ -31,52 +31,14 @@ local function main()
 	--------------- program require
 	require "data.StaticData"
 	require "data.UserData"
-	require "Scene.StoryScene"
 	require "Scene.PreBattleScene"
 	require "Scene.CastleScene"
+	require "Scene.LoadingScene"
 	
 	math.randomseed(os.time()) 
 	
-	local function test(isSuc, result)
-		if isSuc then
-			local data = json.decode(result)
-			local scene = OperationScene.new(UserData.userId)
-			scene:initView()
-			scene:initGround()
-			scene:initData(data)
-			scene:initMenu()
-			display.runScene(scene)
-		end
-	end
-	
-    local function test2(isSuc, result)
-        if isSuc then
-            local r = json.decode(result)
-            if r.code==0 then
-                UserData.userId = r.uid
-                if r.params then
-	                params = r.params
-	                for k, v in pairs(params) do
-	                	PARAM[k] = v
-	                end
-	            end
-                network.httpRequest("getData", test, {params={uid=UserData.userId}})
-            end
-        end
-    end
-
-    local function tempLogin()
-        local username = CCUserDefault:sharedUserDefault():getStringForKey("username")
-        if username and username~="" then
-            print("username", username)
-            network.httpRequest("login", test2, {isPost=true, params={username=username, nickname=CCUserDefault:sharedUserDefault():getStringForKey("nickname")}})
-        else
-            delayCallback(1, tempLogin)
-        end
-    end
-    
     local function runLogoScene()
-        local bg = CCLayerColor:create(ccc4(255, 255, 255, 255), General.winSize.width, General.winSize.height)
+        local bg = CCLayerColor:create(ccc4(0, 0, 0, 255), General.winSize.width, General.winSize.height)
         
         local logo = UI.createSpriteWithFile("images/logo.png")
         screen.autoSuitable(logo, {screenAnchor=General.anchorCenter})
@@ -88,14 +50,17 @@ local function main()
         logo:runAction(CCScaleTo:create(t1, 1, 1))
         
         display.runScene({view=bg})
-        delayCallback(t1+t2, tempLogin)
+        delayCallback(t1+t2, display.runScene, LoadingScene)
+        
+        CCTextureCache:sharedTextureCache():removeTextureForKey("images/logo.png")
     end
     
-    CCUserDefault:sharedUserDefault():setStringForKey("username", "TEST2")
-    CCUserDefault:sharedUserDefault():setStringForKey("nickname", "TEST2")
+    CCUserDefault:sharedUserDefault():setStringForKey("username", "TEST6")
+    CCUserDefault:sharedUserDefault():setStringForKey("nickname", "TEST6")
     
-    print("CCUserDefault sharedUserDefault setStringForKey")
-    runLogoScene()
+    --runLogoScene()
+    UserData.noPerson = true
+    display.runScene(LoadingScene)
     --require "Scene.TestScene"
     --display.runScene(TestScene.create())
 end

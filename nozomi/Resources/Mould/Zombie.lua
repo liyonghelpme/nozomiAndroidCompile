@@ -1,6 +1,6 @@
 Zombie = class(Soldier)
 
-local ZombieSetting = {[1]={0.75, 15}, [2]={0.55, 11}, [3]={0.5, 15, 0.5}, [4]={0.5, 10, 0.5}, [5]={0.55, 11, 0.5}, [6]={0.7, 10, 0.7}, [7]={0.77,11,0.7}, [8]={0.8, 10, 0.7}}
+local ZombieSetting = {[1]={0.75, 15, 0.55}, [2]={0.55, 11, 0.59}, [3]={0.5, 15, 1}, [4]={0.5, 10, 0.75}, [5]={0.55, 11, 1}, [6]={0.7, 10, 1.14}, [7]={0.77,11,1.14}, [8]={0.8, 10, 1}}
 local ZombieViewInfo = {[1]={0, 16}, [2]={0, 20}, [3]={0, 8}, [4]={0, 40}, [5]={0, 20}, [6]={0,25}, [7]={0,20}, [8]={0, 20}}
 local ZombieAttack = {[1]={13, 10}, [2]={13, 10}, [3]={10, 6}, [4]={10, 7}, [5]={13 , 9}, [6]={9, 9}, [7]={13,8}, [8]={11, 5}}
 
@@ -16,6 +16,8 @@ function Zombie:ctor(sid, setting, settingScale)
 	local scale = getParam("zombieScale" .. sid, 100)/100 * settingScale
 	self.viewInfo = {scale=scale, x=ZombieViewInfo[self.sid][1], y=ZombieViewInfo[self.sid][2]*scale}
 	self.plistFile = "animate/zombie/zombie" .. self.sid .. ".plist"
+	self.moveScale=0.5
+	self.shadowScale = ZombieSetting[self.sid][3]
 end
 
 function Zombie:getInitPos()
@@ -70,6 +72,28 @@ function Zombie:resetOtherState()
 	self.displayState.num = times[1]
 	self.displayState.duration = ttime/10
 	self.displayState.prefix = "zombie" .. self.sid .. "_a"
+end
+
+function Zombie:setDeadView()
+	if self.blood then
+		self.blood.view:removeFromParentAndCleanup(true)
+		self.blood = nil
+	end
+	self.state = PersonState.STATE_OTHER
+	self.stateInfo = {action="dead"}
+	self.deleted = true
+	local x, y = self.view:getPosition()
+	y = y + self.viewInfo.y
+	self.view:removeFromParentAndCleanup(true)
+	local t = getParam("soldierDeadTime", 1000)/1000
+	local bomb = UI.createAnimateWithSpritesheet(t, "zombieDead_", 8, {plist="animate/zombieDead.plist"})
+	screen.autoSuitable(bomb, {nodeAnchor=General.anchorCenter, x=x, y=y})
+	if self.info.unitType==2 then y = 0 end
+	self.scene.ground:addChild(bomb, self.scene.SIZEY-y)
+	delayRemove(t, bomb)
+	if self.hitpoints<=0 then
+	    ZombieLogic.incZombieNumber(self.sid)
+	end
 end
 	
 function Zombie:randomMove()
@@ -183,6 +207,13 @@ function Zombie:updateState(diff)
 			 	end
 				self:setAttack()
 				return true
+			elseif not self.enterBattleArea then
+			    local px, py = self.view:getPosition()
+			    local g = self.scene.mapGrid:convertToGrid(px, py, 1)
+			    if g.gridPosX>0 and g.gridPosX<=40 and g.gridPosY>0 and g.gridPosY<=40 then
+			        self.enterBattleArea=true
+			        self:setMoveScale(1)
+			    end
 			end
 		elseif self.state == PersonState.STATE_OTHER then
 		 	local action = self.stateInfo.action
@@ -206,16 +237,6 @@ function Zombie:updateState(diff)
 			-- 入场后的掉落动画，先不实现
 		end
 	end
-end
-
-function Zombie:addShadow()
-	local temp = UI.createSpriteWithFile("images/personShadow.png")
-	temp:setScale((ZombieSetting[self.sid][3] or 0.25)*self.scaleSetting)
-	if self.info.unitType==2 then
-		temp:setOpacity(100)
-	end
-	screen.autoSuitable(temp, {nodeAnchor=General.anchorCenter})
-	self.view:addChild(temp)
 end
 
 BIRD_SETTING={[1]={17, -29}, [2]={35, -5}, [3]={13,15}, [4]={-13,15}, [5]={-35, -5}, [6]={-17,-29}}

@@ -23,7 +23,7 @@ do
 	ScrollButton.__index = ScrollButton
 	
 	function ScrollButton:executeTouchBegan(touchEvent, touch)
-		nodeChangeHandler(true, self.view)
+		self.nodeChangeHandler(true, self.view)
 		self.nodeTouched = true
 	end
 	
@@ -37,19 +37,19 @@ do
 		end
 		if isTouchInNode(self.view, newPoint.x, newPoint.y) then
 			if not self.nodeTouched then
-				nodeChangeHandler(true, self.view)
+				self.nodeChangeHandler(true, self.view)
 				self.nodeTouched = true
 			end
 		else
 			if self.nodeTouched then
-				nodeChangeHandler(false, self.view)
+				self.nodeChangeHandler(false, self.view)
 				self.nodeTouched = false
 			end
 		end
 	end
 	
 	function ScrollButton:executeTouchEnded(touch)
-		nodeChangeHandler(false, self.view)
+		self.nodeChangeHandler(false, self.view)
 		self.nodeTouched = false
 		if not touch.isMoved then
 			self.clickedCallback(self.callbackParam)
@@ -60,7 +60,7 @@ do
 	
 	function ScrollButton:executeTouchCanceled(touch)
 		if self.nodeTouched then
-			nodeChangeHandler(false, self.view)
+			self.nodeChangeHandler(false, self.view)
 			self.nodeTouched = false
 		end
 		if touch.isMoved then
@@ -68,7 +68,7 @@ do
 		end
 	end
 	
-	function ScrollButton:new(button, scrollView, callback, callbackParam)
+	function ScrollButton:new(button, scrollView, callback, callbackParam, setting)
 		local self = {clickedCallback = callback, callbackParam=callbackParam, scrollView=scrollView, view=button}
 		setmetatable(self, ScrollButton)
 		
@@ -79,7 +79,9 @@ do
 			ym=1
 		end 
 		
-		Touch.registerMultiTouch(button, false, display.DIALOG_BUTTON_PRI, self, {XMOVE=xm, YMOVE=ym})
+		local params = setting or {}
+		self.nodeChangeHandler = params.nodeChangeHandler or nodeChangeHandler
+		Touch.registerMultiTouch(button, false, params.priority or display.DIALOG_BUTTON_PRI, self, {XMOVE=xm, YMOVE=ym})
 		
 		return self
 	end
@@ -288,6 +290,10 @@ do
 				off = self.off_max - base
 			end
 			self:moveBy(off)
+			-- TEST
+			if self.moveCallback then
+			    self.moveCallback(self.moveCallbackDelegate)
+			end
 		end
 	end
 	
@@ -303,8 +309,44 @@ do
 		self:executeTouchesEnded()
 	end
 	
-	function ScrollView:addChildTouchNode(node, callback, callbackParam)
-		ScrollButton:new(node, self, callback, callbackParam)
+	function ScrollView:addChildTouchNode(node, callback, callbackParam, setting)
+		ScrollButton:new(node, self, callback, callbackParam, setting)
+	end
+	
+	function ScrollView:createButton(size, callback, setting)
+	    local params = setting or {}
+	    local buttonImage = params.image
+    	local buttonText = params.text
+    	
+    	local node
+	    node = CCExtendNode:create(CCSizeMake(0,0))
+	    
+    	if buttonImage then
+    		local sprite = nil
+    		if size then
+		    	sprite = UI.createSpriteWithFile(buttonImage, size)
+		    else
+		    	sprite = UI.createSpriteWithFile(buttonImage)
+		    	size = sprite:getContentSize()
+		    end
+		    sprite:setAnchorPoint(General.anchorLeftBottom)
+		    node:addChild(sprite)
+	    end
+	    
+    	node:setContentSize(size)
+    	
+    	if buttonText then
+    		local fontSize = params.fontSize or 18
+    		local fontName = params.fontName or General.defaultFont
+    		local colorR, colorG, colorB = params.colorR or 255, params.colorG or 255, params.colorB or 255
+    		local lineOffset = params.lineOffset or 0
+    		local label = UI.createLabel(buttonText, fontName, fontSize, {size = CCSizeMake(size.width, size.height), colorR = colorR, colorG = colorG, colorB = colorB, lineOffset=lineOffset})
+	    	screen.autoSuitable(label, {nodeAnchor=General.anchorCenter, x=size.width/2, y=size.height/2})
+    		node:addChild(label)
+    	end
+    	local nodeChangeHandler = params.nodeChangeHandler
+		ScrollButton:new(node, self, callback, callbackParam, {priority=params.priority, nodeChangeHandler=nodeChangeHandler})
+    	return node
 	end
 	
 	function ScrollView:new(size, isX, priority)

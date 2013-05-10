@@ -54,7 +54,48 @@ do
 	
 	function SoldierLogic.addSoldierToCamp(sid, barrack, camp)
 		snumber[sid] = (snumber[sid] or 0) + 1
+		if SoldierLogic.isInit then
+		    barrack = nil
+		end
 		EventManager.sendMessage("EVENT_BUY_SOLDIER", {sid=sid, from=barrack, to=camp})
+	end
+	
+	function SoldierLogic.deploySoldier(costTroops)
+	    for i=1, #camps do
+	        local camp = camps[i]
+	        local minusSpace = 0
+	        local toDel = {}
+	        for j, soldier in pairs(camp.soldiers) do
+                local sid = soldier.info.sid
+                if costTroops[sid]>0 then
+                    costTroops[sid] = costTroops[sid]-1
+                    minusSpace = minusSpace + soldier.info.space
+                    table.insert(toDel, j)
+                    soldier.view:removeFromParentAndCleanup(true)
+                    snumber[sid] = snumber[sid] - 1
+                end
+            end
+            for j=1, #toDel do
+                camp.soldiers[toDel[j]] = nil
+            end
+            camp.curSpace = camp.curSpace - minusSpace
+	    end
+	end
+	
+	function SoldierLogic.getTrainEndTime()
+	    if SoldierLogic.getTrainingSpace()+SoldierLogic.getCurSpace()<SoldierLogic.getSpaceMax() then
+	        return 0
+	    end
+	    
+		--local updateList = {}
+		--for i=1, #barracks do
+		--    local barrack = barracks[i]
+		--	updateList[i] = {beginTime=barrack.beginTime}
+		--	local callList = {}
+		--	updateList[i].
+		--end
+		--local endTime = timer.getTime()
+		return 0
 	end
 	
 	function SoldierLogic.updateSoldierList()
@@ -100,6 +141,7 @@ do
 				table.remove(updateList, 1)
 			end
 		end
+		SoldierLogic.isInit = false
 	end
 	
 	function SoldierLogic.init(isVisit)
@@ -109,5 +151,5 @@ do
 		spaceMax = 0
 		snumber = {}
 	end
-	CCDirector:sharedDirector():getScheduler():scheduleScriptFunc(SoldierLogic.updateSoldierList, 0.1, false)
+	--CCDirector:sharedDirector():getScheduler():scheduleScriptFunc(SoldierLogic.updateSoldierList, 0.1, false)
 end

@@ -8,7 +8,7 @@ General = {
     defaultFont = "fonts/font1.fnt", specialFont = "fonts/font3.fnt";
     TOUCH_DOWN = 1, TOUCH_CANCEL = 2, TOUCH_CLICK = 3;
     nightColor = ccc3(200, 200, 200), normalColor = ccc3(255, 255, 255);
-    darkAlpha=100
+    darkAlpha=100, useGameCenter=true
 }
 
 require "General.screen"
