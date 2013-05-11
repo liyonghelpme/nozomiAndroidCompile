@@ -1,84 +1,385 @@
-From 2023310e3acbccaf4696ae174680240c844c477a Mon Sep 17 00:00:00 2001
+From 2b7d82576869acd0189b4ecea84384117812f105 Mon Sep 17 00:00:00 2001
 From: liyonghelpme <liyonghelpme@gmail.com>
-Date: Tue, 7 May 2013 09:21:14 +0800
-Subject: [PATCH 2/2] =?UTF-8?q?=E5=85=B3=E9=97=AD=E8=B0=83=E8=AF=95=E6=A8?=
- =?UTF-8?q?=A1=E5=BC=8F=20person=20=E5=92=8C=20world=20=E4=B8=8D=E6=98=BE?=
- =?UTF-8?q?=E7=A4=BA=E4=BF=A1=E6=81=AF?=
+Date: Fri, 10 May 2013 16:41:33 +0800
+Subject: [PATCH 2/5] =?UTF-8?q?=E5=A3=AB=E5=85=B5=E6=94=BB=E5=87=BB=E5=BB?=
+ =?UTF-8?q?=BA=E7=AD=91=E7=89=A9=20=E8=B7=AF=E4=B8=8A=E5=AD=98=E5=9C=A8=E5?=
+ =?UTF-8?q?=9F=8E=E5=A2=99=20=E5=88=99=E4=BC=9A=E6=91=A7=E6=AF=81=E5=9F=8E?=
+ =?UTF-8?q?=E5=A2=99?=
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
 ---
- nozomi/Resources/Mould/Person.lua | 21 ++++++++++++++-------
- nozomi/Resources/Util/World.lua   |  2 +-
- 2 files changed, 15 insertions(+), 8 deletions(-)
+ nozomi/Resources/Mould/Person.lua  |  23 ++++++-
+ nozomi/Resources/Mould/Soldier.lua |  12 ++--
+ nozomi/Resources/Util/World.lua    | 134 +++++++++++++++++++++++++++++++++++--
+ nozomi/Resources/main.lua          |   2 +-
+ nozomi/proj.android/jni/Android.mk |   2 +
+ 5 files changed, 158 insertions(+), 15 deletions(-)
 
 diff --git a/nozomi/Resources/Mould/Person.lua b/nozomi/Resources/Mould/Person.lua
-index fb0bc49..e77824c 100644
+index a0c88f2..938e77c 100644
 --- a/nozomi/Resources/Mould/Person.lua
 +++ b/nozomi/Resources/Mould/Person.lua
-@@ -12,6 +12,8 @@ function Person:ctor()
- 	self.displayState = {direction=1}
+@@ -13,6 +13,7 @@ function Person:ctor()
  	self.direction = 1
  	self.viewInfo = {scale=1, x=0, y=0}
-+
+ 	self.moveScale = 1
 +    self.debug = false
  end
  
- function Person:getMoveArroundPosition(build)
-@@ -187,9 +189,10 @@ function Person:getTruePath(path, world, mapGrid, fx, fy, tx, ty)
- 
-     local info = {path[#path][1], path[#path][2], #path}
-     table.insert(tempPath, info)
--
--    print("getTruePath")
--    print(simpleJson:encode(tempPath))
-+    if self.debug then
-+        print("getTruePath")
-+        print(simpleJson:encode(tempPath))
-+    end
- 
-     path = tempPath
-     --�رյ��Թ��ܲ����øú���
-@@ -213,8 +216,10 @@ function Person:getTruePath(path, world, mapGrid, fx, fy, tx, ty)
- 	end
-     --last path position
- 	table.insert(truePath, {tx, ty, #oldPath})
--    print("world truePath is")
--    print(simpleJson:encode(truePath))
-+    if self.debug then
-+        print("world truePath is")
-+        print(simpleJson:encode(truePath))
-+    end
- 	return truePath
+ function Person:setMoveScale(scale)
+@@ -246,12 +247,24 @@ function Person:setMoveTarget(tx, ty)
+ 	local endPoint = {agrid.gridPosX, agrid.gridPosY}
+ 	if self.info.unitType==1 and (startPoint[1]~=endPoint[1] or startPoint[2]~=endPoint[2]) then
+ 		local w = self.scene.mapWorld
+-		w:clearWorld()
++		--w:clearWorld()
+ 		w:putStart(startPoint[1], startPoint[2])
+ 		w:putEnd(endPoint[1], endPoint[2])
+ 		local path = w:search(startPoint, endPoint)
+         --local truePath = path
+ 		local truePath = self:getTruePath(path, w, self.scene.mapGrid, fx, fy, tx, ty)
++
++        --�趨·�����߼� ��ʼ�´�Ѱ·֮ǰ ������ǰ��·������Ϣ
++        self:clearAllPath()
++        self.gridPath = path
++        self.truePath = truePath
++        --��һ������
++        self.setFromToGrid({0, 0, 1}, self.truePath[1])
++        self:setPathCount()
++        w:showGrid()
++
++
++
+ 		local firstPoint = table.remove(truePath, 1)
+ 		self.stateInfo = {movePath = truePath}
+ 		self.state = PersonState.STATE_MOVING
+@@ -271,7 +284,9 @@ end
+ --clearAllPath �������е�·��
+ function Person:setFromToGrid(f, t)
+     if f ~= nil and t ~= nil then
+-        --print("setFromToGrid"..f[3].." "..t[3])
++        if self.debug then
++            print("setFromToGrid"..f[3].." "..t[3])
++        end
+         self.curGrid = f
+         self.nextGrid = t
+     end
+@@ -295,7 +310,9 @@ function Person:clearPathCount(from, to)
  end
- 		
-@@ -353,8 +358,10 @@ function Person:update(diff)
-                 --������ǰ��ʼ������Ϊֹ������״̬
-                 self:clearPathCount(self.curGrid, self.nextGrid)
- 				local point = table.remove(stateInfo.movePath, 1)
--                print("point is ")
--                print(point)
-+                if self.debug then
-+                    print("point is ")
-+                    print(point)
-+                end
-                 self:setFromToGrid(self.nextGrid, point)
- 				self:moveDirect(point[1], point[2])
- 			else --���һ���ƶ�����
+ 
+ function Person:setPathCount() 
+-    --print("setPathCount")
++    if self.debug then
++        print("setPathCount")
++    end
+     local w = self.scene.mapWorld
+     --ֻ�趨���һ��λ�õ�path count
+     local l = #self.gridPath
+diff --git a/nozomi/Resources/Mould/Soldier.lua b/nozomi/Resources/Mould/Soldier.lua
+index e982b77..08f809f 100644
+--- a/nozomi/Resources/Mould/Soldier.lua
++++ b/nozomi/Resources/Mould/Soldier.lua
+@@ -253,8 +253,8 @@ function Soldier:searchAttack()
+         w:clearWorld()
+         w:putStart(startPoint[1], startPoint[2])
+         --print("test1")
+-
+-        local path, target, lastPoint = w:searchAttack(self.info.range*2, grid.gridFloatX, grid.gridFloatY)
++        --����ʿ����ǰ��λ�� ���ڼ������
++        local path, target, lastPoint = w:searchAttack(self.info.range*2, grid.gridFloatX, grid.gridFloatY, fx, fy)
+ 
+         if lastPoint then
+             local position = self.scene.mapGrid:convertToPosition(lastPoint[1]/2, lastPoint[2]/2)
+@@ -267,9 +267,11 @@ function Soldier:searchAttack()
+             self.setFromToGrid({0, 0, 1}, self.truePath[1])
+             self:setPathCount()
+ 
+-            --print("self path Data")
+-            --print(simpJson:encode(self.gridPath))
+-            --print(simpJson:encode(self.truePath))
++            if self.debug then
++                print("self path Data")
++                print(simpJson:encode(self.gridPath))
++                print(simpJson:encode(self.truePath))
++            end
+             w:showGrid()
+ 
+         end	
 diff --git a/nozomi/Resources/Util/World.lua b/nozomi/Resources/Util/World.lua
-index 02e96fe..badfd35 100644
+index 8e4d02c..857fd27 100644
 --- a/nozomi/Resources/Util/World.lua
 +++ b/nozomi/Resources/Util/World.lua
-@@ -51,7 +51,7 @@ function World:ctor(cellNum, coff)
+@@ -3,6 +3,7 @@
+ 
+ require "Util.Class"
+ require "Util.heapq"
++local simpleJson =  require "Util.SimpleJson"
+ 
+ World = class()
+ 
+@@ -51,7 +52,7 @@ function World:ctor(cellNum, coff)
      self.scene = nil
  
      --是否显示调试块
--    self.debug = true
-+    self.debug = false
+-    self.debug = false
++    self.debug = true
  end
+ 
  function World:setScene(s)
-     self.scene = s
+@@ -74,12 +75,25 @@ end
+ function round(x)
+     return math.floor(x+0.5)
+ end
++--实际坐标 转化成 网格编号 
+ function cartesianToNormal(x, y)
+     return round(x/23), round(y/17.25)
+ end
+ function normalToAffine(nx, ny)
+     return round((nx+ny)/2), round((ny-nx)/2)
+ end
++
++--用于计算当前位置和攻击范围的关系
++--返回浮点normal 网格坐标
++function cartesianToNormalFloat(x, y)
++    return (x/23), (y/17.25)
++end
++
++--返回浮点affine 网格坐标  
++function normalToAffineFloat(nx, ny)
++    return (nx+ny)/2, (ny-nx)/2
++end
++
+ function normalToCartesian(nx, ny)
+     return nx*23, ny*17.25
+ end
+@@ -180,19 +194,24 @@ function World:putWall(x, y)
+     self.cells[self:getKey(x, y)]['state'] = 'Wall'
+ end
+ 
++--设定Grid
+ function World:clearGrids(x, y, size)
+ 	for i=1, size do
+ 		for j=1, size do
+-			self.cells[self:getKey(x-1+i, y-1+j)]['state'] = nil
++            local key = self:getKey(x-1+i, y-1+j)
++			self.cells[key]['state'] = nil
++            self.cells[key]['obj'] = nil
+ 		end
+ 	end
+ end
+ 
+ --陷阱 城墙 装饰
+-function World:setGrids(x, y, size)
++function World:setGrids(x, y, size, obj)
+ 	for i=1, size do
+ 		for j=1, size do
+-			self.cells[self:getKey(x-1+i, y-1+j)]['state'] = 'Wall'
++            local key = self:getKey(x-1+i, y-1+j)
++			self.cells[key]['state'] = 'Wall'
++            self.cells[key]['obj'] = obj
+ 		end
+ 	end
+ end
+@@ -521,7 +540,8 @@ function World:addPathCount(x, y)
+     local old = self.cells[key]['pathCount'] or 0
+     self.cells[key]['pathCount'] = old+1
+ end
+-function World:searchAttack(range, fx, fy)
++--士兵当前的位置坐标 solX solY
++function World:searchAttack(range, fx, fy, solX, solY)
+     self.searchNum = self.searchNum + 1
+     if self.searchNum >= self.maxSearchNum then
+         self.searchYet = true
+@@ -575,6 +595,7 @@ function World:searchAttack(range, fx, fy)
+         if #(possible) > 0 then
+             local point = table.remove(possible) --这里可以加入随机性 在多个可能的点中选择一个点 用于改善路径的效果 
+             local x, y = self:getXY(point)
++            --当前点到建筑物距离 小于 士兵的射程
+             local prevGrid = self.prevGrids[self:getKey(x, y)]
+             if prevGrid and prevGrid[1][1]<=range then
+             	prevGrid = prevGrid[1]
+@@ -591,8 +612,10 @@ function World:searchAttack(range, fx, fy)
+ 	            	lastPoint = {zx, zx*ry/rx}
+ 	            end
+             	parent = self.cells[self:getKey(x, y)]['parent']
++                --起始点在射程内 不用移动
+             	if x==self.startPoint[1] and y==self.startPoint[2] then
+             		dx, dy = math.abs(bx-prevGrid[2][1])-fsize-1, math.abs(by-prevGrid[2][2])-fsize-1
++                    --射程内 不用路径
+             		if (dx<0 and dy<=range) or (dy<0 and dx<=range) or (dx>=0 and dy>=0 and dx*dx+dy*dy<=range*range) then
+             			self.searchType = nil
+             			self.endPoint = nil
+@@ -605,6 +628,7 @@ function World:searchAttack(range, fx, fy)
+             	if y<prevGrid[2][2] then
+             		lastPoint[2] = 1-lastPoint[2]
+             	end
++                --移动目标
+             	lastPoint = {x+lastPoint[1], y+lastPoint[2]}
+             	target = prevGrid[4]
+                 break
+@@ -617,11 +641,19 @@ function World:searchAttack(range, fx, fy)
+     local path = {}
+     --local parent = self.cells[self:getKey(self.endPoint[1], self.endPoint[2])]['parent']
+     --print("getPath", parent)
++    --得到路径目标 攻击对象 最后一个网格内随机点
++    --path = {{x, y}, {x, y}, {x, y}}
++    
+     while parent ~= nil do
+         local x, y = self:getXY(parent)
+         table.insert(path, {x, y})
++        self.cells[parent]['isPath'] = true
++        if x == self.startPoint[1] and y == self.startPoint[2] then
++            break
++        end
++          
++        --[[
+         if x == self.startPoint[1] and y == self.startPoint[2] then
+-        
+         	if tempStart[1] or tempStart[2] then
+         		table.insert(self.path, {tempStart[1] or self.startPoint[1], tempStart[2] or self.startPoint[2]})
+         	end
+@@ -630,16 +662,106 @@ function World:searchAttack(range, fx, fy)
+             self.cells[parent]['isPath'] = true
+             table.insert(self.path, {x, y})
+         end
++        --]]
+         parent = self.cells[parent]["parent"]
+     end
+     
++    
+     local temp = {}
++    local findWall = false
++    local wallX = 0
++    local wallY = 0
++    local wallObj = nil
+     for i = #path, 1, -1 do
+         table.insert(temp, path[i])
++        local key = self:getKey(path[i][1], path[i][2])
++        local data = self.cells[key]
++        --如果路径上面有城墙 则 停止
++        if data['state'] == 'Wall' then
++            print("findWall Here")
++            print(data["obj"])
++            findWall = true
++            wallX = path[i][1]
++            wallY = path[i][2]
++            wallObj = data['obj']
++            break
++        end
+         --print(path[i][1], path[i][2])
+     end
++
++    --路径中间有城墙
++    --攻击范围 0.8 属于affine 空间
++    print("findWall")
++    print(findWall)
++    --使用affine 坐标计算位置差值
++    if findWall then
++        local key = self:getKey(wallX, wallY)
++        local wpx, wpy = wallX, wallY
++        local solAffX, solAffY = cartesianToNormalFloat(solX, solY)
++        solAffX, solAffY = normalToAffineFloat(solAffX, solAffY)
++        --local wpx, wpy = affineToNormal(wallX, wallY)
++        --wpx, wpy = normalToCartesian(wpx, wpy)
++        print("wallpos ")
++        --print(wallX, wallY)
++        print(wpx, wpy)
++        print(range)
++
++        --起点在攻击范围圆内
++        local dx = solAffX - wpx 
++        local dy = solAffY - wpy
++        --只有两个以下的顶点
++        if dx*dx+dy*dy <= range*range or #temp <= 2 then
++            temp = {}
++            target = wallObj 
++
++            --return round(x/23), round(y/17.25)
++        --FIXME:
++            lastPoint = {0, 0} 
++        --起点在圆外  判断某个网格是否边界网格 
++        --部分顶点在 射程范围外
++        --部分顶点在射程范围内
++        else
++            --2个以上的顶点
++            local stopGrid = math.max(#temp-1, 1)
++            for i = #temp-1, 1, -1 do
++                local x, y = temp[i][1], temp[i][2]
++                --x, y = affineToNormal(x, y)
++                --x, y = normalToCartesian(x, y)
++                print("affine distance")
++                local dx = x - wpx
++                local dy = y - wpy
++                print(wpx, wpy)
++                print(x, y)
++                print(dx, dy)
++                if dx*dx+dy*dy > range*range then
++                    stopGrid = math.min(i + 1, stopGrid)
++                    break
++                end
++            end
++            --移除后面的顶点
++            for i = #temp, stopGrid+1, -1 do
++                table.remove(temp, i)
++            end
++            target = wallObj
++            local x, y = affineToNormal(temp[stopGrid][1], temp[stopGrid][2])
++            x, y = normalToCartesian(x, y)
++            --网格内随机一定位置
++            local rx = math.random()*23-11.5
++            local ry = math.random()*17.25-17.25/2
++            
++            lastPoint = {temp[stopGrid][1], temp[stopGrid][2]}
++        end
++    end
++
++    --反向路径 temp 判定是否有
+     self.endPoint = nil
+     self.searchType = nil
++
++    print("world searchAttack target ")
++    print(simpleJson:encode(temp))
++    print(target)
++    print(simpleJson:encode(lastPoint))
++    --路径 攻击目标 路径最后的位置点
+     return temp, target, lastPoint
+ end
+ 
+diff --git a/nozomi/Resources/main.lua b/nozomi/Resources/main.lua
+index e11f97d..6de2ae7 100644
+--- a/nozomi/Resources/main.lua
++++ b/nozomi/Resources/main.lua
+@@ -59,7 +59,7 @@ local function main()
+     CCUserDefault:sharedUserDefault():setStringForKey("nickname", "TEST6")
+     
+     --runLogoScene()
+-    UserData.noPerson = true
++    UserData.noPerson = false
+     display.runScene(LoadingScene)
+     --require "Scene.TestScene"
+     --display.runScene(TestScene.create())
+diff --git a/nozomi/proj.android/jni/Android.mk b/nozomi/proj.android/jni/Android.mk
+index 1bacf96..2ff2885 100644
+--- a/nozomi/proj.android/jni/Android.mk
++++ b/nozomi/proj.android/jni/Android.mk
+@@ -28,6 +28,7 @@ LOCAL_SRC_FILES := hellocpp/main.cpp \
+ 					../../Classes/extend_shader/CCHSVShaderHandler.cpp \
+ 					../../Classes/network/CCHttpRequest.cpp \
+ 					../../Classes/network/CCHttpRequest_impl.cpp \
++					../../Classes/AssetsManager/AssetsManager.cpp\
+ 
+                    
+ LOCAL_C_INCLUDES := $(LOCAL_PATH)/../../Classes  \
+@@ -44,6 +45,7 @@ LOCAL_C_INCLUDES := $(LOCAL_PATH)/../../Classes  \
+ 					$(LOCAL_PATH)/../../Classes/platform \
+ 					$(LOCAL_PATH)/../../../scripting/lua/lua \
+ 					$(LOCAL_PATH)/../../../scripting/lua/tolua \
++					$(LOCAL_PATH)/../../Classes/AssetsManager\
+ 
+ 
+ 
 -- 
 1.8.1.msysgit.1
 
