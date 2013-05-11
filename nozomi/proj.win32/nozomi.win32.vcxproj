@@ -1,0 +1,198 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{CF2BA6A8-66FB-46D0-A136-9C4B57CBE88C}</ProjectGuid>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <OutDir>$(SolutionDir)$(Configuration).win32\</OutDir>
+    <IntDir>$(Configuration).win32\</IntDir>
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <OutDir>$(SolutionDir)$(Configuration).win32\</OutDir>
+    <IntDir>$(Configuration).win32\</IntDir>
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>G:\share\cocos2d-x-runnable\cocos2dx\platform\third_party\win32\zlib;G:\share\cocos2d-x-runnable\nozomi\Classes\AssetsManager;G:\share\cocos2d-x-runnable\extensions;G:\share\cocos2d-x-runnable\extensions\AssetsManager;G:\share\cocos2d-x-runnable\nozomi\Classes\cocos2dx_support;.;..\Classes;$(SolutionDir)cocos2dx;$(SolutionDir)cocos2dx\include;$(SolutionDir)cocos2dx\kazmath\include;$(SolutionDir)cocos2dx\platform\win32;$(SolutionDir)cocos2dx\platform\third_party\win32;$(SolutionDir)cocos2dx\platform\third_party\win32\OGLES;$(SolutionDir)external;$(SolutionDir)CocosDenshion\include;$(SolutionDir)scripting\lua\cocos2dx_support;$(SolutionDir)scripting\lua\tolua;$(SolutionDir)scripting\lua\lua;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <MinimalRebuild>true</MinimalRebuild>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;STRICT;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS_DEBUG;COCOS2D_DEBUG=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <DisableSpecificWarnings>4267;4251;4244;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <TargetMachine>MachineX86</TargetMachine>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>G:\share\cocos2d-x-runnable\cocos2dx\platform\third_party\win32\zlib;$(OutDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>libcurl_imp.lib;libcocos2d.lib;opengl32.lib;glew32.lib;libBox2d.lib;libCocosDenshion.lib;liblua.lib;libExtensions.lib;libzlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <Profile>true</Profile>
+    </Link>
+    <ResourceCompile>
+      <Culture>0x0409</Culture>
+      <AdditionalIncludeDirectories>$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ResourceCompile>
+    <Midl>
+      <MkTypLibCompatible>false</MkTypLibCompatible>
+      <TargetEnvironment>Win32</TargetEnvironment>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <HeaderFileName>nozomi.h</HeaderFileName>
+      <InterfaceIdentifierFileName>nozomi_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>nozomi_p.c</ProxyFileName>
+      <GenerateStublessProxies>true</GenerateStublessProxies>
+      <TypeLibraryName>$(IntDir)/nozomi.tlb</TypeLibraryName>
+      <DllDataFileName>
+      </DllDataFileName>
+    </Midl>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>.;..\Classes;$(SolutionDir)cocos2dx;$(SolutionDir)cocos2dx\include;$(SolutionDir)cocos2dx\kazmath\include;$(SolutionDir)cocos2dx\platform\win32;$(SolutionDir)cocos2dx\platform\third_party\win32;$(SolutionDir)cocos2dx\platform\third_party\win32\OGLES;$(SolutionDir)external;$(SolutionDir)CocosDenshion\include;$(SolutionDir)scripting\lua\cocos2dx_support;$(SolutionDir)scripting\lua\tolua;$(SolutionDir)scripting\lua\lua;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <ExceptionHandling>
+      </ExceptionHandling>
+      <DebugInformationFormat>
+      </DebugInformationFormat>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;STRICT;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGSNDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <DisableSpecificWarnings>4267;4251;4244;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <TargetMachine>MachineX86</TargetMachine>
+      <AdditionalLibraryDirectories>$(OutDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>libcocos2d.lib;opengl32.lib;glew32.lib;libBox2d.lib;libCocosDenshion.lib;liblua.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <ResourceCompile>
+      <Culture>0x0409</Culture>
+      <AdditionalIncludeDirectories>$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ResourceCompile>
+    <Midl>
+      <MkTypLibCompatible>false</MkTypLibCompatible>
+      <TargetEnvironment>Win32</TargetEnvironment>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <HeaderFileName>nozomi.h</HeaderFileName>
+      <InterfaceIdentifierFileName>nozomi_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>nozomi_p.c</ProxyFileName>
+      <GenerateStublessProxies>true</GenerateStublessProxies>
+      <TypeLibraryName>$(IntDir)/nozomi.tlb</TypeLibraryName>
+      <DllDataFileName>
+      </DllDataFileName>
+    </Midl>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <None Include="res\nozomi.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="nozomi.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\cocos2dx\support\zip_support\ioapi.h" />
+    <ClInclude Include="..\..\cocos2dx\support\zip_support\unzip.h" />
+    <ClInclude Include="..\..\cocos2dx\support\zip_support\ZipUtils.h" />
+    <ClInclude Include="..\Classes\AppDelegate.h" />
+    <ClInclude Include="..\Classes\AssetsManager\AssetsManager.h" />
+    <ClInclude Include="..\Classes\cocos2dx_support\CCLuaEngine.h" />
+    <ClInclude Include="..\Classes\cocos2dx_support\Cocos2dxLuaLoader.h" />
+    <ClInclude Include="..\Classes\cocos2dx_support\LuaCocos2d.h" />
+    <ClInclude Include="..\Classes\cocos2dx_support\tolua_fix.h" />
+    <ClInclude Include="..\Classes\cocos2d_ext.h" />
+    <ClInclude Include="..\Classes\cocos2d_ext_const.h" />
+    <ClInclude Include="..\Classes\cocos2d_ext_tolua.h" />
+    <ClInclude Include="..\Classes\crypto\base64\libb64.h" />
+    <ClInclude Include="..\Classes\crypto\CCCrypto.h" />
+    <ClInclude Include="..\Classes\crypto\md5\md5.h" />
+    <ClInclude Include="..\Classes\crypto\rsa\bigint.h" />
+    <ClInclude Include="..\Classes\crypto\rsa\rsa.h" />
+    <ClInclude Include="..\Classes\crypto\sha1\sha1.h" />
+    <ClInclude Include="..\Classes\extend_actions\CCExtendActionInterval.h" />
+    <ClInclude Include="..\Classes\extend_nodes\CCExtendNode.h" />
+    <ClInclude Include="..\Classes\extend_nodes\CCExtendSprite.h" />
+    <ClInclude Include="..\Classes\extend_nodes\CCTextInput.h" />
+    <ClInclude Include="..\Classes\extend_nodes\Lightning.h" />
+    <ClInclude Include="..\Classes\extend_shader\CCHSVShaderHandler.h" />
+    <ClInclude Include="..\Classes\extend_shader\ccShader_HSVTransfer_frag.h" />
+    <ClInclude Include="..\Classes\network\CCHttpRequest.h" />
+    <ClInclude Include="..\Classes\network\CCHttpRequestDelegate.h" />
+    <ClInclude Include="..\Classes\network\CCHttpRequest_impl.h" />
+    <ClInclude Include="main.h" />
+    <ClInclude Include="resource.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\cocos2dx\support\zip_support\ioapi.cpp" />
+    <ClCompile Include="..\..\cocos2dx\support\zip_support\unzip.cpp" />
+    <ClCompile Include="..\..\cocos2dx\support\zip_support\ZipUtils.cpp" />
+    <ClCompile Include="..\Classes\AppDelegate.cpp" />
+    <ClCompile Include="..\Classes\AssetsManager\AssetsManager.cpp" />
+    <ClCompile Include="..\Classes\cocos2dx_support\CCLuaEngine.cpp" />
+    <ClCompile Include="..\Classes\cocos2dx_support\Cocos2dxLuaLoader.cpp" />
+    <ClCompile Include="..\Classes\cocos2dx_support\LuaCocos2d.cpp" />
+    <ClCompile Include="..\Classes\cocos2dx_support\tolua_fix.c" />
+    <ClCompile Include="..\Classes\cocos2d_ext_tolua.cpp" />
+    <ClCompile Include="..\Classes\crypto\base64\libb64.c" />
+    <ClCompile Include="..\Classes\crypto\CCCrypto.cpp" />
+    <ClCompile Include="..\Classes\crypto\md5\md5.c" />
+    <ClCompile Include="..\Classes\crypto\rsa\bigint.c" />
+    <ClCompile Include="..\Classes\crypto\rsa\rsa.c" />
+    <ClCompile Include="..\Classes\crypto\sha1\sha1.cpp" />
+    <ClCompile Include="..\Classes\extend_actions\CCExtendActionInterval.cpp" />
+    <ClCompile Include="..\Classes\extend_nodes\CCExtendNode.cpp" />
+    <ClCompile Include="..\Classes\extend_nodes\CCExtendSprite.cpp" />
+    <ClCompile Include="..\Classes\extend_nodes\CCTextInput.cpp" />
+    <ClCompile Include="..\Classes\extend_nodes\Lightning.cpp" />
+    <ClCompile Include="..\Classes\extend_shader\CCHSVShaderHandler.cpp" />
+    <ClCompile Include="..\Classes\network\CCHttpRequest.cpp" />
+    <ClCompile Include="..\Classes\network\CCHttpRequest_impl.cpp" />
+    <ClCompile Include="main.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\extensions\proj.win32\libExtensions.vcxproj">
+      <Project>{21b2c324-891f-48ea-ad1a-5ae13de12e28}</Project>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
