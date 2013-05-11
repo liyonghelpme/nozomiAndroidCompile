@@ -52,7 +52,7 @@ function World:ctor(cellNum, coff)
     self.scene = nil
 
     --是否显示调试块
-    self.debug = true
+    self.debug = false
 
     --通过大网格记录最近的建筑物 来帮助searchAttack 计算HScore
     --80*80 = 20*20
@@ -121,6 +121,8 @@ function World:showGrid()
     self.calGrid = CCNode:create()
     self.calGrid:setPosition(0, 0)
 
+    --显示大网格的最近建筑物
+    --为什么我的affine坐标系的 x y 和 游戏内的 x y 
     local totalX = math.ceil(self.cellNum/self.bigCoff)
     local totalY = math.ceil(self.cellNum/self.bigCoff)
     for x = 1, totalX, 1 do
@@ -130,21 +132,38 @@ function World:showGrid()
                 local cx, cy = self:getBigCenter(x, y)
                 local nx, ny = affineToNormal(cx, cy)
                 local px, py = normalToCartesian(nx, ny)
-                local nearX, nearY = self.bigGrid[key]['nearX'], self.bigGrid[key]['nearY']
+
+                local nearX, nearY = self.bigGrid[key]['nearX'], self.bigGrid[key]['nearY'] 
                 nearX, nearY = affineToNormal(nearX, nearY)
                 nearX, nearY = normalToCartesian(nearX, nearY)
+
                 local dx, dy = nearX-px, nearY-py
                 local dist = math.sqrt(dx*dx+dy*dy)
-                local angle = math.atan2(dy, dx)
+                local angle = math.atan2(dy, dx)*180/math.pi
 
-                local temp = CCSprite:create("block.png")
+                local temp = CCSprite:create("myLine.png")
                 local cs = temp:getContentSize()
 
-                temp:setAnchorPoint(ccp(0.5, 0.5))
-                temp:setScaleX(dist/cs.width)
-                temp:setRotation(angle)
+                --[[
+                local word = CCLabelTTF:create(""..dx.." "..dy.." "..angle.." "..dist, "Arial", 30)
+                word:setColor(ccc3(255, 0, 255))
+                word:setPosition(px+zx, py+zy+17.25)
+                word:setAnchorPoint(ccp(0.5, 0.5))
+                
+                self.calGrid:addChild(word)
+                ]]--
 
-                temp:setPosition(px+zx, py+zy+17.25)
+
+                temp:setOpacity(128)
+                temp:setAnchorPoint(ccp(0, 0.5))
+                temp:setScaleX(dist/cs.width)
+                temp:setScaleY(10/cs.height)
+                temp:setRotation(angle+180)
+
+
+                temp:setPosition(-px+zx, py+zy+17.25)
+
+                self.calGrid:addChild(temp)
             end
         end
     end
@@ -296,8 +315,8 @@ function World:setBuild(x, y, size, btype, obj)
     --居中位置
     --大网格对应的最近建筑
     --每个建筑 作为最近建筑 对应的若干个大网格 
-    local cx = x+size/2
-    local cy = y+size/2
+    local cx = x+fsize
+    local cy = y+fsize
     local totalX = math.ceil(self.cellNum/self.bigCoff)
     local totalY = math.ceil(self.cellNum/self.bigCoff)
     for i=1, totalX, 1 do
@@ -394,8 +413,8 @@ function World:findNearBuild(x, y)
         if newDist < minDist then
             data['nearDist'] = newDist
             data['nearObj'] = obj
-            data['nearX'] = cx
-            data['nearY'] = cy
+            data['nearX'] = v[1]
+            data['nearY'] = v[2]
             minDist = newDist
         end
     end
@@ -410,10 +429,12 @@ function World:clearBuild(x, y, size, btype, obj)
     --清理当前建筑的最近的大网格
     --为大网格重新寻找最近的建筑
     if self.buildToBig[obj] ~= nil then
-        for k, v in ipairs(self.buildToBig) do
+        local grids = self.buildToBig[obj]
+        self.buildToBig[obj] = nil
+        for k, v in ipairs(grids) do
             self:findNearBuild(v[1], v[2])
         end
-        self.buildToBig[obj] = nil
+
     end
     
 
@@ -447,6 +468,8 @@ function World:clearBuild(x, y, size, btype, obj)
 			end
 		end
 	end
+
+    --self:showGrid()
 end
 
 -- 临边10 斜边 14
@@ -459,7 +482,11 @@ function World:calcG(x, y)
     -- 经营页面绕不过去城墙的时候 士兵可以穿过城墙
     --当前可以绕过5个城墙
     if data['state'] == 'Wall' then
-        dist = 50
+        if data['wallPath'] then
+            dist = 1
+        else
+            dist = 50
+        end
         --[[
         if self.searchType == "attack" then
             dist = 50
@@ -851,18 +878,22 @@ function World:searchAttack(range, fx, fy, solX, solY)
     local wallX = 0
     local wallY = 0
     local wallObj = nil
+    --local wallData = nil
+    --当前状态是城墙 且 有士兵路径 则降低该城墙的权值
     for i = #path, 1, -1 do
         table.insert(temp, path[i])
         local key = self:getKey(path[i][1], path[i][2])
         local data = self.cells[key]
         --如果路径上面有城墙 则 停止
         if data['state'] == 'Wall' then
-            print("findWall Here")
-            print(data["obj"])
+            --print("findWall Here")
+            --print(data["obj"])
             findWall = true
             wallX = path[i][1]
             wallY = path[i][2]
             wallObj = data['obj']
+            --wallData = data
+            data['wallPath'] = true
             break
         end
         --print(path[i][1], path[i][2])
@@ -870,8 +901,9 @@ function World:searchAttack(range, fx, fy, solX, solY)
 
     --路径中间有城墙
     --攻击范围 0.8 属于affine 空间
-    print("findWall")
-    print(findWall)
+
+    --print("findWall")
+    --print(findWall)
     --使用affine 坐标计算位置差值
     if findWall then
         local key = self:getKey(wallX, wallY)
@@ -880,17 +912,18 @@ function World:searchAttack(range, fx, fy, solX, solY)
         solAffX, solAffY = normalToAffineFloat(solAffX, solAffY)
         --local wpx, wpy = affineToNormal(wallX, wallY)
         --wpx, wpy = normalToCartesian(wpx, wpy)
-        print("wallpos ")
+        --print("wallpos ")
         --print(wallX, wallY)
-        print(wpx, wpy)
-        print(range)
+        --print(wpx, wpy)
+        --print(range)
 
         --起点在攻击范围圆内
         local dx = solAffX - wpx 
         local dy = solAffY - wpy
         --只有两个以下的顶点
+        --至少保持路径有一个顶点
         if dx*dx+dy*dy <= range*range or #temp <= 2 then
-            temp = {}
+            temp = {temp[1]}
             target = wallObj 
 
             --return round(x/23), round(y/17.25)
@@ -905,12 +938,12 @@ function World:searchAttack(range, fx, fy, solX, solY)
                 local x, y = temp[i][1], temp[i][2]
                 --x, y = affineToNormal(x, y)
                 --x, y = normalToCartesian(x, y)
-                print("affine distance")
+                --print("affine distance")
                 local dx = x - wpx
                 local dy = y - wpy
-                print(wpx, wpy)
-                print(x, y)
-                print(dx, dy)
+                --print(wpx, wpy)
+                --print(x, y)
+                --print(dx, dy)
                 if dx*dx+dy*dy > range*range then
                     stopGrid = math.min(i + 1, stopGrid)
                     break
@@ -935,10 +968,10 @@ function World:searchAttack(range, fx, fy, solX, solY)
     self.endPoint = nil
     self.searchType = nil
 
-    print("world searchAttack target ")
-    print(simpleJson:encode(temp))
-    print(target)
-    print(simpleJson:encode(lastPoint))
+    --print("world searchAttack target ")
+    --print(simpleJson:encode(temp))
+    --print(target)
+    --print(simpleJson:encode(lastPoint))
     --路径 攻击目标 路径最后的位置点
     return temp, target, lastPoint
 end
