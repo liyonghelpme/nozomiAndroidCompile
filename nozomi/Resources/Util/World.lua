@@ -3,6 +3,7 @@
 
 require "Util.Class"
 require "Util.heapq"
+require "Util.MyStrokeFont"
 local simpleJson =  require "Util.SimpleJson"
 
 World = class()
@@ -61,6 +62,9 @@ end
 
 function World:setScene(s)
     self.scene = s
+
+    --测试
+    --self.scene.ground:addChild(MyStrokeFont:test(), 10000)
 end
 --更新搜索状态 每固定时间 限制寻路的士兵数量
 function World:update(dt)
@@ -481,6 +485,7 @@ function World:calcG(x, y)
     local dist = 10
     -- 经营页面绕不过去城墙的时候 士兵可以穿过城墙
     --当前可以绕过5个城墙
+    --一旦有士兵选择城墙 则一起攻击
     if data['state'] == 'Wall' then
         if data['wallPath'] then
             dist = 1

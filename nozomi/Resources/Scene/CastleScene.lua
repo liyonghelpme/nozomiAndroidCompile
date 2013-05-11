@@ -18,6 +18,7 @@ require "Scene.BattleMenuLayer"
 require "Scene.ReplayMenuLayer"
 require "Scene.ChatRoom"
 require "Scene.MapGridView"
+require "Util.MyStrokeFont"
 
 CastleScene = class()
 
@@ -54,6 +55,9 @@ function CastleScene:initView()
     self.view = CCLayer:create()
     
     local ground = CCNode:create()
+    --Test
+    --self.view:addChild(MyStrokeFont:test(), 10000)
+
     screen.autoSuitable(ground, {screenAnchor=General.anchorCenter, nodeAnchor=General.anchorLeftBottom, x=-SIZEX/2, y=-SIZEY/2, scaleType=screen.SCALE_NORMAL, scale=self.scMin*4})
     self.view:addChild(ground)
     self.ground = ground
