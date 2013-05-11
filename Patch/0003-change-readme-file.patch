@@ -1,0 +1,32 @@
+From 25ca9f4bd5a6102208e061136c4118b5f10a951f Mon Sep 17 00:00:00 2001
+From: liyonghelpme <liyonghelpme@gmail.com>
+Date: Sat, 4 May 2013 13:39:35 +0800
+Subject: [PATCH 3/4] change readme file
+
+---
+ README.mdown | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
+
+diff --git a/README.mdown b/README.mdown
+index 67bab0f..e67ff20 100644
+--- a/README.mdown
++++ b/README.mdown
+@@ -22,4 +22,15 @@ Lua require 
+ 
+ eclipse中新建工程 编译即可
+ 
++资源管理下载
++=======
++1.增加AssetsManager
++2.修改AppDelegate
++3.依赖zip 支持
++4.增加生成zip file 和版本 的脚本 genZipAndMd5
++
++genZipAndMd5
++-----
++压缩所有file directory 和 lua file
++
+ 
+-- 
+1.8.1.msysgit.1
+
