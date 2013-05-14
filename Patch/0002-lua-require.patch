@@ -1,0 +1,50 @@
+From 9ab5199a129aad6d8aa01f10b67818c34fa52743 Mon Sep 17 00:00:00 2001
+From: liyonghelpme <liyonghelpme@gmail.com>
+Date: Wed, 1 May 2013 13:40:35 +0800
+Subject: [PATCH 02/12] =?UTF-8?q?=E6=94=B9=E5=96=84=E5=8A=A0=E8=BD=BDlua?=
+ =?UTF-8?q?=20require=20=E4=BB=A3=E7=A0=81=20CCLuaLoader?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+---
+ nozomi/Classes/AppDelegate.cpp                        | 2 +-
+ nozomi/Classes/cocos2dx_support/Cocos2dxLuaLoader.cpp | 4 +++-
+ 2 files changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/nozomi/Classes/AppDelegate.cpp b/nozomi/Classes/AppDelegate.cpp
+index acaaf6c..9020bb2 100644
+--- a/nozomi/Classes/AppDelegate.cpp
++++ b/nozomi/Classes/AppDelegate.cpp
+@@ -43,7 +43,7 @@ bool AppDelegate::applicationDidFinishLaunching()
+     CCScriptEngineManager::sharedManager()->setScriptEngine(pEngine);
+ 
+ #if (CC_TARGET_PLATFORM == CC_PLATFORM_ANDROID)
+-    pEngine->addSearchPath("assets");
++    //pEngine->addSearchPath("assets");
+     //需要实际路径 因为zip 打开的是 整个apk文件 其中lua文件在assets中
+     CCString* pstrFileContent = CCString::createWithContentsOfFile("assets/main.lua");
+     if (pstrFileContent)
+diff --git a/nozomi/Classes/cocos2dx_support/Cocos2dxLuaLoader.cpp b/nozomi/Classes/cocos2dx_support/Cocos2dxLuaLoader.cpp
+index 46e8449..40dc115 100644
+--- a/nozomi/Classes/cocos2dx_support/Cocos2dxLuaLoader.cpp
++++ b/nozomi/Classes/cocos2dx_support/Cocos2dxLuaLoader.cpp
+@@ -32,12 +32,14 @@ extern "C"
+     int loader_Android(lua_State *L)
+     {
+         std::string filename(luaL_checkstring(L, 1));
+-        filename.append(".lua");
++        //filename.append(".lua");
+         std::string fullName = "assets/"+filename;
+         int position = fullName.find(".");
+         while(position != std::string::npos) {
+             fullName.replace(position, 1, "/");
++            position = fullName.find(".", position+1);
+         }
++        fullName.append(".lua");
+         CCLog("loader_Android file %s", fullName.c_str());
+         CCString* pFileContent = CCString::createWithContentsOfFile(fullName.c_str());
+ 
+-- 
+1.8.1.msysgit.1
+
