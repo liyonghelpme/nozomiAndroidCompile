@@ -28,6 +28,8 @@ LOCAL_SRC_FILES := hellocpp/main.cpp \
 					../../Classes/extend_shader/CCHSVShaderHandler.cpp \
 					../../Classes/network/CCHttpRequest.cpp \
 					../../Classes/network/CCHttpRequest_impl.cpp \
+					../../Classes/AssetsManager/AssetsManager.cpp\
+
 
                    
 LOCAL_C_INCLUDES := $(LOCAL_PATH)/../../Classes  \
@@ -44,6 +46,7 @@ LOCAL_C_INCLUDES := $(LOCAL_PATH)/../../Classes  \
 					$(LOCAL_PATH)/../../Classes/platform \
 					$(LOCAL_PATH)/../../../scripting/lua/lua \
 					$(LOCAL_PATH)/../../../scripting/lua/tolua \
+					$(LOCAL_PATH)/../../Classes/AssetsManager \
 
 
 
