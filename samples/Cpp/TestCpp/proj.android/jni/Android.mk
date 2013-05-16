@@ -17,6 +17,9 @@ LOCAL_WHOLE_STATIC_LIBRARIES += box2d_static
 LOCAL_WHOLE_STATIC_LIBRARIES += chipmunk_static
 LOCAL_WHOLE_STATIC_LIBRARIES += cocos_extension_static
 
+LOCAL_LDLIBS := -lssl \
+				-lcrypto \
+
 include $(BUILD_SHARED_LIBRARY)
 
 $(call import-module,samples/Cpp/TestCpp)
